@@ -112,64 +112,28 @@ public class LWC {
      */
     public static boolean ENABLED = false;
 
-    /**
-     * The current instance of LWC
-     */
     private static LWC instance;
 
-    /**
-     * Core LWC configuration
-     */
     private Configuration configuration;
 
-    /**
-     * The module loader
-     */
     private final ModuleLoader moduleLoader;
 
-    /**
-     * The manager of backups
-     */
     private final BackupManager backupManager;
 
-    /**
-     * The protection cache
-     */
     private final ProtectionCache protectionCache;
 
-    /**
-     * Physical database instance
-     */
     private PhysDB physicalDatabase;
 
-    /**
-     * Plugin instance
-     */
-    private LWCPlugin plugin;
+    private final LWCPlugin plugin;
 
-    /**
-     * Updates to the database that can be ran on a seperate thread
-     */
     private DatabaseThread databaseThread;
 
-    /**
-     * The permissions handler
-     */
     private IPermissions permissions;
 
-    /**
-     * The currency handler
-     */
     private ICurrency currency;
 
-    /**
-     * Protection configuration cache
-     */
     private final Map<String, String> protectionConfigurationCache = new HashMap<>();
 
-    /**
-     * Whether alternative-hopper-protection is enabled
-     */
     private boolean alternativeHoppers;
 
     public LWC(LWCPlugin plugin) {
@@ -185,24 +149,19 @@ public class LWC {
     /**
      * Get the currently loaded LWC instance
      *
-     * @return
+     * @return The currently loaded LWC instance
      */
     public static LWC getInstance() {
         return instance;
     }
 
     /**
-     * Get a string representation of a block type
+     * Get a string representation of a block material.<br>
+     * When LWC's {@link com.griefcraft.lwc.MessageParser MessageParser} finds a localized version of the Material name
+     * will that one be used instead of the default Material name.
      *
-     * @param id
-     * @return
-     */
-
-    /**
-     * Get a string representation of a block material
-     *
-     * @param material
-     * @return
+     * @param material The Material to get a String representation of
+     * @return String representing the name of a Material, or empty String if Material is null.
      */
     public static String materialToString(Material material) {
         if (material != null) {
@@ -224,20 +183,25 @@ public class LWC {
     }
 
     /**
-     * <p>Normalize a name to a more readable and usable form.</p>
+     * Change the Material name into a normalized, more generic version to read.
      * 
-     * E.g sign_post/wall_sign = Sign, furnace/burning_furnace = Furnace,
-     * iron_door_block = iron_door
+     * <p>The method performs the following actions in order:
+     * <ul>
+     *     <li>Replace any appearance of "block" to an empty String</li>
+     *     <li>Change name to "Sign" if it contains "sign" (i.e. "wall_sign" becomes "Sign")</li>
+     *     <li>Change name to "furnace" if it contains "furnace" (i.e. "blast_furnace" becomes "furnace"</li>
+     *     <li>Remove any trailing underscore from the name</li>
+     * </ul>
      *
-     * @param material
-     * @return
+     * @param material The Material to get the normalized name of.
+     * @return String representing the normalized name of the Material as described by the above rules.
      */
     public static String normalizeMaterialName(Material material) {
         String name = StringUtils.replace(material.toString().toLowerCase(), "block", "");
 
         // some name normalizations
         if (name.contains("sign")) {
-            name = "Sign";
+            name = "sign";
         }
 
         if (name.contains("furnace")) {
@@ -252,9 +216,13 @@ public class LWC {
     }
 
     /**
+     * <b>Currently unused!</b><br>
      * Restore the direction the block is facing for when 1.8 broke it
      *
-     * @param block
+     * <p>This only works with Chests.
+     * 
+     * @param block The block to adjust.
+     * @param face The Block's current rotation.
      */
     public void adjustChestDirection(Block block, BlockFace face) { // TODO: this probably doesn't work currently
         if (block.getType() != Material.CHEST) {
@@ -292,10 +260,16 @@ public class LWC {
     }
 
     /**
-     * Look for a double chest adjacent to a chest
+     * Method to look for other chests right next to the provided block.<br>
+     * This method may return null in the following cases:
+     * <ul>
+     *     <li>Provided Block is not a Chest</li>
+     *     <li>There is no block next to the provided block and it's not a chest</li>
+     * </ul>
      *
-     * @param block
-     * @return
+     * @param block The block to check for adjacent blocks around it.
+     * @return Block instance of the neighbouring chest or null if none was found.
+     * @throws UnsupportedOperationException When the provided Block is not a supported chest type.
      */
     public Block findAdjacentDoubleChest(Block block) {
         if (!DoubleChestMatcher.PROTECTABLES_CHESTS.contains(block.getType())) {
@@ -329,9 +303,9 @@ public class LWC {
     /**
      * Check if a player has the ability to access a protection
      *
-     * @param player
-     * @param block
-     * @return
+     * @param player The player to check
+     * @param block The block to check protection for
+     * @return True if the block is protected and the player can access it
      */
     public boolean canAccessProtection(Player player, Block block) {
         Protection protection = findProtection(block.getLocation());
@@ -342,11 +316,11 @@ public class LWC {
     /**
      * Check if a player has the ability to access a protection
      *
-     * @param player
-     * @param x
-     * @param y
-     * @param z
-     * @return
+     * @param player The player to check
+     * @param x The X coordinate of the block to check protection for
+     * @param y The Y coordinate of the block to check protection for
+     * @param z The Z coordinate of the block to check protection for
+     * @return True if the block at the provided coordinates is protected and the player can access it.
      */
     public boolean canAccessProtection(Player player, int x, int y, int z) {
         return canAccessProtection(player, physicalDatabase.loadProtection(player.getWorld().getName(), x, y, z));
@@ -355,9 +329,9 @@ public class LWC {
     /**
      * Check if a player has the ability to administrate a protection
      *
-     * @param player
-     * @param block
-     * @return
+     * @param player The player to check
+     * @param block The block to check protection for
+     * @return True if the block is protected and the player can administrate it
      */
     public boolean canAdminProtection(Player player, Block block) {
         Protection protection = findProtection(block.getLocation());
@@ -366,11 +340,25 @@ public class LWC {
     }
 
     /**
-     * Check if a player has the ability to administrate a protection
+     * Check if a player has the ability to administrate a protection.
+     * 
+     * <p>Returns true in the following cases:
+     * <ul>
+     *     <li>Either Protection or Player are null</li>
+     *     <li>Player is Admin (See {@link #isAdmin(Player) isAdmin} for conditions)</li>
+     *     <li>Chest has {@link com.griefcraft.model.Protection.Type#PUBLIC PUBLIC} protection type</li>
+     *     <li>Chest has {@link com.griefcraft.model.Protection.Type#PASSWORD PASSWORD} protection type, Player is Owner 
+     *     of the Protection and has access to the protection</li>
+     *     <li>Chest has either {@link com.griefcraft.model.Protection.Type#PRIVATE PRIVATE},
+     *     {@link com.griefcraft.model.Protection.Type#DONATION DONATION} or
+     *     {@link com.griefcraft.model.Protection.Type#DISPLAY DISPLAY} protection Type and player is either Owner,
+     *     has Admin permission or {@link LWCAccessEvent#getAccess() LWCAccessEvent.getAccess()} returns
+     *     {@link com.griefcraft.model.Permission.Access#ADMIN Permission.Access#ADMIN}</li>
+     * </ul>
      *
-     * @param player
-     * @param protection
-     * @return
+     * @param player The player to check
+     * @param protection The protection to check
+     * @return True if any of the above mentioned conditions match
      */
     public boolean canAdminProtection(Player player, Protection protection) {
         if (protection == null || player == null) {
@@ -434,33 +422,35 @@ public class LWC {
     }
 
     /**
-     * Deposit items into an inventory chest Works with double chests.
+     * Deposit items into an inventory chest. Works with double chests.
      *
-     * @param block
-     * @param itemStack
-     * @return remaining items (if any)
+     * @param block The block to deposit items into
+     * @param itemStack The items to deposit
+     * @return Map that is either empty, or contains any remaining ItemStacks
      */
     public Map<Integer, ItemStack> depositItems(Block block, ItemStack itemStack) {
-        BlockState blockState;
+        BlockState blockState = block.getState();
 
-        if ((blockState = block.getState()) != null && (blockState instanceof InventoryHolder)) {
+        if (blockState instanceof InventoryHolder) {
             Block doubleChestBlock = null;
             InventoryHolder holder = (InventoryHolder) blockState;
 
+            Map<Integer, ItemStack> remaining = new HashMap<>();
             if (DoubleChestMatcher.PROTECTABLES_CHESTS.contains(block.getType())) {
+                remaining = holder.getInventory().addItem(itemStack);
                 doubleChestBlock = findAdjacentDoubleChest(block);
             } else if (block.getType() == Material.FURNACE) {
                 Inventory inventory = holder.getInventory();
-
-                if (inventory.getItem(0) != null && inventory.getItem(1) != null) {
-                    if (inventory.getItem(0).getType() == itemStack.getType()
-                            && inventory.getItem(0)
-                            .getMaxStackSize() >= (inventory.getItem(0).getAmount() + itemStack.getAmount())) {
-                        // ItemStack fits on Slot 0
-                    } else if (inventory.getItem(1).getType() == itemStack.getType()
-                            && inventory.getItem(1)
-                            .getMaxStackSize() >= (inventory.getItem(1).getAmount() + itemStack.getAmount())) {
-                        // ItemStack fits on Slot 1
+                
+                ItemStack slot0 = inventory.getItem(0);
+                ItemStack slot1 = inventory.getItem(1);
+                if (slot0 != null && slot1 != null) {
+                    if (slot0.getType() == itemStack.getType() && 
+                            slot0.getMaxStackSize() >= (slot0.getAmount() + itemStack.getAmount())) {
+                        remaining = holder.getInventory().addItem(itemStack);
+                    } else if (slot1.getType() == itemStack.getType() &&
+                            slot1.getMaxStackSize() >= (slot1.getAmount() + itemStack.getAmount())) {
+                        remaining = holder.getInventory().addItem(itemStack);
                     } else {
                         return null;
                     }
@@ -468,10 +458,8 @@ public class LWC {
             }
 
             if (itemStack.getAmount() <= 0) {
-                return new HashMap<Integer, ItemStack>();
+                return new HashMap<>();
             }
-
-            Map<Integer, ItemStack> remaining = holder.getInventory().addItem(itemStack);
 
             // we have remainders, deal with it
             if (remaining.size() > 0) {
@@ -491,16 +479,21 @@ public class LWC {
             }
         }
 
-        return new HashMap<Integer, ItemStack>();
+        return new HashMap<>();
     }
 
     /**
-     * Find a block that is adjacent to another block given a Material
+     * Find a block that is adjacent to another block given a Material.
+     * 
+     * <p>This method only looks on the four adjacent sides North, East, South and West and ignores Top and Bottom of the
+     * block.<br>
+     * Use {@link #findAdjacentBlockOnAllSides(Block, Material, Block...) findAdjacentBlockOnAllSides} to include top 
+     * and bottom.
      *
-     * @param block
-     * @param material
-     * @param ignore
-     * @return
+     * @param block The block to look for adjacent neighbours
+     * @param material The Material to check the adjacent blocks against
+     * @param ignore Array of blocks to ignore
+     * @return The block found or null if the conditions were not met
      */
     public Block findAdjacentBlock(Block block, Material material, Block... ignore) {
         BlockFace[] faces = new BlockFace[]{BlockFace.NORTH, BlockFace.SOUTH, BlockFace.EAST, BlockFace.WEST};
@@ -521,10 +514,10 @@ public class LWC {
      * Find a block that is adjacent to another block on any of the block's 6 sides
      * given a Material
      *
-     * @param block
-     * @param material
-     * @param ignore
-     * @return
+     * @param block The block to look for adjacent neighbours
+     * @param material The Material to check the adjacent blocks against
+     * @param ignore Array of blocks to ignore
+     * @return The block found or null if the conditions were not met
      */
     public Block findAdjacentBlockOnAllSides(Block block, Material material, Block... ignore) {
         BlockFace[] faces = new BlockFace[]{BlockFace.NORTH, BlockFace.SOUTH, BlockFace.EAST, BlockFace.WEST,
@@ -546,15 +539,15 @@ public class LWC {
      * Find a protection that is adjacent to another block on any of the block's 6
      * sides
      *
-     * @param block
-     * @param ignore
-     * @return
+     * @param block The block to look for adjacent protections
+     * @param ignore Array of blocks to ignore
+     * @return Possibly-empty List of Protection instances found
      */
     public List<Protection> findAdjacentProtectionsOnAllSides(Block block, Block... ignore) {
         BlockFace[] faces = new BlockFace[]{BlockFace.NORTH, BlockFace.SOUTH, BlockFace.EAST, BlockFace.WEST,
                 BlockFace.UP, BlockFace.DOWN};
         List<Block> ignoreList = Arrays.asList(ignore);
-        List<Protection> found = new ArrayList<Protection>();
+        List<Protection> found = new ArrayList<>();
 
         for (BlockFace face : faces) {
             Protection protection;
@@ -595,9 +588,10 @@ public class LWC {
     }
 
     /**
-     * Log a string
+     * Log a string<br>
+     * This is essentially a shortcut for {@code getPlugin().getLogger().info(str)}
      *
-     * @param str
+     * @param str The string to log
      */
     public void log(String str) {
         plugin.getLogger().info(str);
@@ -606,8 +600,8 @@ public class LWC {
     /**
      * Encrypt a string using SHA1
      *
-     * @param text
-     * @return
+     * @param text The text to encrypt
+     * @return The encrypted String
      */
     public String encrypt(String text) {
         return StringUtil.encrypt(text);
@@ -616,12 +610,12 @@ public class LWC {
     /**
      * Enforce access to a protected block
      *
-     * @param player
-     * @param protection
-     * @param block
-     * @param hasAccess
+     * @param player The player to check against
+     * @param protection The protection to edit access for
+     * @param block The block to check against
+     * @param hasAccess Boolean used to set if player should be checked as Owner/Admin for a chest
      * @param notice     Should this method print a notice to the player? (some events may call this several times)
-     * @return true if the player was granted access
+     * @return true if the player was granted access or the "hasAccess" boolean provided
      */
     public boolean enforceAccess(Player player, Protection protection, Block block, boolean hasAccess, boolean notice) {
         MessageParser parser = plugin.getMessageParser();
@@ -663,7 +657,7 @@ public class LWC {
                 boolean isOwner = protection.isOwner(player);
                 boolean showMyNotices = configuration.getBoolean("core.showMyNotices", true);
 
-                if (!isOwner || (isOwner && (showMyNotices || permShowNotices))) {
+                if (!isOwner || showMyNotices || permShowNotices) {
                     String owner;
 
                     // replace your username with "you" if you own the protection
@@ -711,11 +705,35 @@ public class LWC {
     }
 
     /**
-     * Check if a player has the ability to access a protection
+     * Check if a player has the ability to access a protection<br>
+     * Returns true in the following cases:
+     * <ul>
+     *     <li>Protection or Player is null</li>
+     *     <li>Player is admin as by the conditions of {@link #isAdmin(Player) isAdmin}</li>
+     *     <li>Player is Mod as by the conditions of {@link #isMod(Player) isMod} AND
+     *     <ul>
+     *         <li>Owner of protection is null OR</li>
+     *         <li>Owner of protection is not an admin as by the conditions of {@link #isAdmin(Player) isAdmin}</li>
+     *     </ul></li>
+     *     <li>Protection Type is either {@link com.griefcraft.model.Protection.Type#PUBLIC PUBLIC},
+     *     {@link com.griefcraft.model.Protection.Type#DONATION DONATION} or
+     *     {@link com.griefcraft.model.Protection.Type#DISPLAY DISPLAY}</li>
+     *     <li>Protection type is {@link com.griefcraft.model.Protection.Type#PASSWORD PASSWORD} and player can access
+     *     the protection</li>
+     *     <li>Protection Type is {@link com.griefcraft.model.Protection.Type#PRIVATE PRIVATE} AND the player...
+     *     <ul>
+     *         <li>...is the Owner of the Protection OR</li>
+     *         <li>...has a higher Access Level as the Protection OR</li>
+     *         <li>...holds the required Item in hand when accessing the Protection</li>
+     *     </ul></li>
+     *     <li>{@link LWCAccessEvent#getAccess() LWCAccessEvent.getAccess()} returns 
+     *     {@link com.griefcraft.model.Permission.Access#ADMIN Permission.Access#ADMIN}</li>
+     * </ul>
      *
-     * @param player
-     * @param protection
-     * @return
+     * @param player Player to check
+     * @param protection Protection to check
+     * @return True if any of the above mentioned conditions match
+     * @deprecated Use {@link #canAdminProtection(Player, Block) canAdminProtection} instead
      */
     @SuppressWarnings("deprecation")
     public boolean canAccessProtection(Player player, Protection protection) {
@@ -806,7 +824,8 @@ public class LWC {
     }
 
     /**
-     * Check if a player can do mod functions on LWC
+     * Check if a player can do mod functions on LWC<br>
+     * A player is "mod" for LWC when they have the permission {@code lwc.mod}
      *
      * @param player the player to check
      * @return true if the player is an LWC mod
@@ -816,27 +835,29 @@ public class LWC {
     }
 
     /**
-     * Check if a player can do admin functions on LWC
+     * Check if a player can do admin functions on LWC<br>
+     * A player is "admin" for LWC when they either are OP and {@code opIsLWCAdmin} is true OR has the permission
+     * {@code lwc.admin}
      *
      * @param player the player to check
      * @return true if the player is an LWC admin
      */
     public boolean isAdmin(Player player) {
-        if (player.isOp()) {
-            if (configuration.getBoolean("core.opIsLWCAdmin", true)) {
-                return true;
-            }
+        if (player.isOp() && configuration.getBoolean("core.opIsLWCAdmin", true)) {
+            return true;
         }
 
         return hasPermission(player, "lwc.admin");
     }
 
     /**
-     * Check if a player has a permissions node
+     * Check if a player has a permissions node<br>
+     * This method tries to first check, if the player has permissions using the {@code hasPermission} method, and
+     * will check if the provided String contains either "admin" or "mod" in case the hasPermission check doesn't work.
      *
-     * @param player
-     * @param node
-     * @return
+     * @param player The player to check
+     * @param node The permission node to check for
+     * @return True if the player has the required permission
      */
     public boolean hasPermission(Player player, String node) {
         try {
@@ -848,33 +869,34 @@ public class LWC {
     }
 
     /**
-     * Create an LWCPlayer object for a player
+     * Create an LWCPlayer object for a player<br>
+     * This will return null if the CommandSender is NOT an instance of either {@link com.griefcraft.model.LWCPlayer LWCPlayer}
+     * or the Bukkit Player.
      *
-     * @param sender
-     * @return
+     * @param sender The CommandSender to get a LWCPlayer instance from
+     * @return The LWCPlayer instance obtained or null if the provided CommandSender is not an instance of LWCPlayer
+     * or Bukkit's Player
      */
     public LWCPlayer wrapPlayer(CommandSender sender) {
         if (sender instanceof LWCPlayer) {
             return (LWCPlayer) sender;
         }
 
-        if (!(sender instanceof Player)) {
-            return null;
-        }
-
-        return LWCPlayer.getPlayer((Player) sender);
+        return (sender instanceof Player) ? LWCPlayer.getPlayer((Player) sender) : null;
     }
 
     /**
-     * Find a player in the given ranges
+     * Find a player in the given ranges<br>
+     * This method will essentially check the location of every online player on the server and see if they are within
+     * the defined area. It will return the first player it can find.
      *
-     * @param minX
-     * @param maxX
-     * @param minY
-     * @param maxY
-     * @param minZ
-     * @param maxZ
-     * @return
+     * @param minX First X coordinate for the Area
+     * @param maxX Second X coordinate for the Area
+     * @param minY First Y coordinate for the Area
+     * @param maxY Second Y coordinate for the Area
+     * @param minZ First Z coordinate for the area
+     * @param maxZ Second Z coordinate for the area
+     * @return First player found within the area or null if no player was found
      */
     public Player findPlayer(int minX, int maxX, int minY, int maxY, int minZ, int maxZ) {
         for (Player player : plugin.getServer().getOnlinePlayers()) {
@@ -893,14 +915,16 @@ public class LWC {
     }
 
     /**
-     * <p>Check the data of locale</p>
-     * Returns null if invalid
+     * Gets the localized message for the CommandSender to receive.<br>
+     * If the provided key doesn't result in a localized message to be found, will this method return null.
+     * 
+     * <p>This method allows you to define an array of arguments that should be parsed. The format should be
+     * {@code "%argument1%", replacement1, "%argument2%, replacement2, ...}
      *
      * @param sender CommandSender
      * @param key    key of locale
      * @param args   Character to be rewritten
-     *               Example: %block% = Chest
-     * @return message or null
+     * @return message if found or null otherwise
      */
     public String[] getLocaleMessage(CommandSender sender, String key, Object... args) {
         String[] message; // The message to send to the player
@@ -928,11 +952,13 @@ public class LWC {
     }
 
     /**
-     * Send a locale to a player or console
+     * Send a locale to a player or console<br>
+     * This method will do nothing if the localized message couldn't be found or, in case of ConsoleSender being a Player,
+     * the {@link com.griefcraft.scripting.event.LWCSendLocaleEvent LWCSendLocaleEvent} was cancelled.
      *
-     * @param sender
-     * @param key
-     * @param args
+     * @param sender The CommandSender that should receive the message
+     * @param key The key to find the localized message of
+     * @param args Any arguments that should be parsed in the format {@code "argument1", replacement1, ...}
      */
     public void sendLocale(CommandSender sender, String key, Object... args) {
         // The message to send to the player
@@ -968,11 +994,13 @@ public class LWC {
     }
 
     /**
-     * Attempt to send a locale to a player's action bar (otherwise, send it normally)
+     * Attempt to send a locale to a player's action bar (otherwise, send it normally)<br>
+     * This method will do nothing if the localized message couldn't be found or, in case of ConsoleSender being a Player,
+     * the {@link com.griefcraft.scripting.event.LWCSendLocaleEvent LWCSendLocaleEvent} was cancelled.
      *
-     * @param sender
-     * @param key
-     * @param args
+     * @param sender The CommandSender that should receive the message
+     * @param key The key to find the localized message of
+     * @param args Any arguments that should be parsed in the format {@code "argument1", replacement1, ...}
      */
     public void sendLocaleToActionBar(CommandSender sender, String key, Object... args) {
         // The message to send to the player
@@ -1029,8 +1057,8 @@ public class LWC {
     /**
      * Get a string representation of a block's material
      *
-     * @param block
-     * @return
+     * @param block The block to get the name of
+     * @return String representating the block's name.
      */
     public static String materialToString(Block block) {
         if (block instanceof EntityBlock) {
@@ -1042,10 +1070,10 @@ public class LWC {
     /**
      * Fast remove all protections for a player. ~100k protections / second.
      *
-     * @param sender
-     * @param player
-     * @param shouldRemoveBlocks
-     * @return
+     * @param sender The sender who executes this action
+     * @param player The player to remove protections of
+     * @param shouldRemoveBlocks If blocks should be removed
+     * @return Amount of protections removed
      */
     public int fastRemoveProtectionsByPlayer(CommandSender sender, String player, boolean shouldRemoveBlocks) {
         UUID uuid = UUIDRegistry.getUUID(player);
@@ -1070,13 +1098,13 @@ public class LWC {
     /**
      * Remove protections very quickly with raw SQL calls
      *
-     * @param sender
-     * @param where
-     * @param shouldRemoveBlocks
-     * @return
+     * @param sender The CommandSender that triggers this action
+     * @param where The SQL query to be executed using {@code WHERE}
+     * @param shouldRemoveBlocks If blocks should be removed too
+     * @return Amount of completed executions
      */
     public int fastRemoveProtections(CommandSender sender, String where, boolean shouldRemoveBlocks) {
-        List<Integer> exemptedBlocks = configuration.getIntList("optional.exemptBlocks", new ArrayList<Integer>());
+        List<Integer> exemptedBlocks = configuration.getIntList("optional.exemptBlocks", new ArrayList<>());
         List<Integer> toRemove = new LinkedList<>();
         List<Block> removeBlocks = null;
         int totalProtections = physicalDatabase.getProtectionCount();
@@ -1087,7 +1115,7 @@ public class LWC {
         databaseThread.flush();
 
         if (shouldRemoveBlocks) {
-            removeBlocks = new LinkedList<Block>();
+            removeBlocks = new LinkedList<>();
         }
 
         if (where != null && !where.trim().isEmpty()) {
@@ -1163,10 +1191,12 @@ public class LWC {
     }
 
     /**
-     * Push removal changes to the database
+     * Push removal changes to the database<br>
+     * This will use the provided List of Integers to remove any Database Entry that has an ID matching the entry in
+     * the list.
      *
-     * @param sender
-     * @param toRemove
+     * @param sender The CommandSender that triggered this action
+     * @param toRemove List of Integers to remove matching entries from the database
      */
     private void fullRemoveProtections(CommandSender sender, List<Integer> toRemove) throws SQLException {
         StringBuilder deleteProtectionsQuery = new StringBuilder();
@@ -1190,7 +1220,9 @@ public class LWC {
                 deleteProtectionsQuery.append("DELETE FROM ").append(prefix).append("protections WHERE id IN (")
                         .append(protectionId);
                 deleteHistoryQuery.append("UPDATE ").append(prefix)
-                        .append("history SET status = " + History.Status.INACTIVE.ordinal() + " WHERE protectionId IN(")
+                        .append("history SET status = ")
+                        .append(History.Status.INACTIVE.ordinal())
+                        .append(" WHERE protectionId IN(")
                         .append(protectionId);
             } else {
                 deleteProtectionsQuery.append(",").append(protectionId);
@@ -1217,9 +1249,13 @@ public class LWC {
 
     /**
      * Remove a list of blocks from the world
+     * 
+     * <p>This method will ignore blocks that don't exist (are null) or that aren't
+     * {@link #isProtectable(Block) protectable}<br>
+     * In case of a double chest will it also remove the adjacent chest block next to it.
      *
-     * @param sender
-     * @param blocks
+     * @param sender CommandSender that triggered this
+     * @param blocks List of Block instances to remove
      */
     private void removeBlocks(CommandSender sender, List<Block> blocks) {
         int count = 0;
@@ -1252,9 +1288,10 @@ public class LWC {
     }
 
     /**
-     * Remove the inventory from a block
+     * Remove the inventory from a block<br>
+     * This method will do nothing if the provided block is either null, or can't be a InventoryHolder
      *
-     * @param block
+     * @param block the Block to clear the Inventory from
      */
     private void removeInventory(Block block) {
         if (block == null) {
@@ -1270,22 +1307,23 @@ public class LWC {
     }
 
     /**
-     * Compares two blocks if they are equal
+     * Compares two blocks if they are equal<br>
+     * The Blocks are seen as "equal" if their type and coordinate match.
      *
-     * @param block
-     * @param block2
-     * @return
+     * @param block The first block
+     * @param block2 The second block to compare with the first one
+     * @return True if type and location match.
      */
     public boolean blockEquals(Block block, Block block2) {
-        return block.getType() == block2.getType() && block.getX() == block2.getX() && block.getY() == block2.getY()
-                && block.getZ() == block2.getZ();
+        return block.getType() == block2.getType() && block.getLocation() == block2.getLocation();
     }
 
     /**
-     * Find a protection linked to the location
+     * Find a protection linked to the location<br>
+     * Will return null if the location is known to not exist in the database or if it can't be found.
      *
-     * @param location
-     * @return
+     * @param location The location to check for a Protection
+     * @return The Protection if found or null
      */
     public Protection findProtection(Location location) {
         String cacheKey = protectionCache.cacheKey(location);
@@ -1302,8 +1340,8 @@ public class LWC {
     /**
      * Find a protection linked to the block
      *
-     * @param block
-     * @return
+     * @param block The block to find a protection for
+     * @return The Protection if found or null
      */
     public Protection findProtection(Block block) {
         return findProtection(block.getState());
@@ -1343,7 +1381,7 @@ public class LWC {
                 if (found == null) {
                     protectionCache.addKnownNull(protectionCache.cacheKey(block.getLocation()));
                 }
-            } catch (Exception e) {
+            } catch (Exception ignored) {
             }
             return found;
         }
@@ -1353,16 +1391,16 @@ public class LWC {
     }
 
     /**
-     * Find a protection linked to the block at [x, y, z]
+     * Compares two block states if they are equal<br>
+     * The Block states are seen as "equal" if their type and coordinate match.
      *
-     * @param block
-     * @param block2
-     * @return
+     * @param block The first block state
+     * @param block2 The second block state to compare with the first one
+     * @return True if type and location match.
      */
 
     public boolean blockEquals(BlockState block, BlockState block2) {
-        return block.getType() == block2.getType() && block.getX() == block2.getX() && block.getY() == block2.getY()
-                && block.getZ() == block2.getZ();
+        return block.getType() == block2.getType() && block.getLocation() == block2.getLocation();
     }
 
     public Protection findProtection(World world, int x, int y, int z) {
@@ -1378,33 +1416,27 @@ public class LWC {
      * clicking a chest will match double chests, clicking a door or block below a
      * door matches the whole door
      *
-     * @param state
+     * @param state The block state to check against
      * @return the List of possible blocks
      */
     public boolean isProtectable(BlockState state) {
         Material material = state.getType();
 
-        if (material == null) {
-            return false;
-        }
-
         return Boolean.parseBoolean(resolveProtectionConfiguration(state, "enabled"));
     }
 
     public boolean isProtectable(EntityType state) {
-
         return Boolean.parseBoolean(resolveProtectionConfiguration(state, "enabled"));
     }
 
-    @SuppressWarnings("deprecation")
     public String resolveProtectionConfiguration(BlockState state, String node) {
         Material material = state.getType();
-        String cacheKey = material.toString() + "-" + node;
+        String cacheKey = material + "-" + node;
         if (protectionConfigurationCache.containsKey(cacheKey)) {
             return protectionConfigurationCache.get(cacheKey);
         }
 
-        List<String> names = new ArrayList<String>();
+        List<String> names = new ArrayList<>();
 
         String materialName = normalizeMaterialName(material);
 
@@ -1461,31 +1493,34 @@ public class LWC {
     /**
      * Check if a player has either access to lwc.admin or the specified node
      *
-     * @param sender
-     * @param node
-     * @return
+     * @param sender The CommandSender to check
+     * @param node The node to check against. This will default to lwc.admin
+     * @return True if the sender is an admin by LWC's definition
      */
     public boolean hasAdminPermission(CommandSender sender, String node) {
         return isAdmin(sender) || hasPermission(sender, node, "lwc.admin");
     }
 
     /**
-     * Check if a player is an LWC admin -- Console defaults to *YES*
+     * Check if a player is an LWC admin<br>
+     * The player is considered an admin if they're either the Console, or {@link #isAdmin(Player) isAdmin(Player)}
+     * returns true.
      *
-     * @param sender
-     * @return
+     * @param sender The CommandSender to check
+     * @return True if the sender is an admin by LWC's definition
      */
     public boolean isAdmin(CommandSender sender) {
         return !(sender instanceof Player) || isAdmin((Player) sender);
     }
 
     /**
-     * Check a player for a node, using a fallback as a default (e.g lwc.protect)
+     * Check a player for a node, using an array of Strings as fallback (e.g. lwc.protect)<br>
+     * Will return true by default if the CommandSender is not a Player and therefore the console.
      *
-     * @param sender
-     * @param node
-     * @param fallback
-     * @return
+     * @param sender The CommandSender to check
+     * @param node The node to check for
+     * @param fallback Array of fallback Strings to use
+     * @return True if the sender has the permission(s)
      */
     public boolean hasPermission(CommandSender sender, String node, String... fallback) {
         if (!(sender instanceof Player)) {
@@ -1509,48 +1544,47 @@ public class LWC {
     /**
      * Check if a player has either access to lwc.protect or the specified node
      *
-     * @param sender
-     * @param node
-     * @return
+     * @param sender The CommandSender to check
+     * @param node The permission node to check against
+     * @return True if the sender has the permission or lwc.protect
      */
     public boolean hasPlayerPermission(CommandSender sender, String node) {
         return hasPermission(sender, node, "lwc.protect");
     }
 
     /**
-     * Check if a mode is enabled
+     * Check if a specific mode in the configuration is enabled<br>
+     * The available modes can be found under "modes" in the configuration file of LWC
      *
-     * @param mode
-     * @return
+     * @param mode The mode to check
+     * @return True if the specified mode is enabled in the configuration
      */
     public boolean isModeEnabled(String mode) {
         return configuration.getBoolean("modes." + mode + ".enabled", true);
     }
 
     /**
-     * Check if a mode is whitelisted for a player
+     * Check if a mode is whitelisted for a player<br>
+     * A mode is whitelisted for a player if they have the {@code lwc.mode.&lt;mode&gt;} or {@code lwc.allmodes} permission 
      *
-     * @param mode
-     * @return
+     * @param player The player to check
+     * @param mode The mode to check against
+     * @return True if the player has the required mode permission or lwc.allmodes
      */
     public boolean isModeWhitelisted(Player player, String mode) {
         return hasPermission(player, "lwc.mode." + mode, "lwc.allmodes");
     }
 
     /**
-     * Check a block to see if it is protectable
+     * Check a block to see if it is protectable<br>
+     * A block is protectable if their corresponding entry in the LWC configuration is enabled.
      *
-     * @param block
-     * @return
+     * @param block The block to check
+     * @return True if the block is protectable
      */
     public boolean isProtectable(Block block) {
-        Material material = block.getType();
         if (block instanceof EntityBlock) {
             return Boolean.parseBoolean(resolveProtectionConfiguration(EntityBlock.getEntity().getType(), "enabled"));
-        }
-
-        if (material == null) {
-            return false;
         }
 
         return Boolean.parseBoolean(resolveProtectionConfiguration(block, "enabled"));
@@ -1559,16 +1593,13 @@ public class LWC {
     /**
      * Get the appropriate config value for the block (protections.block.node)
      *
-     * @param block
-     * @param node
-     * @return
+     * @param block The block to get the value for
+     * @param node The node to get the value for
+     * @return String representaing the config value for the block
      */
     public String resolveProtectionConfiguration(Block block, String node) {
         Material material = block.getType();
-        if (material == null) {
-            return null;
-        }
-        String cacheKey = material.toString() + "-" + node;
+        String cacheKey = material + "-" + node;
         if (protectionConfigurationCache.containsKey(cacheKey)) {
             return protectionConfigurationCache.get(cacheKey);
         }
@@ -1612,9 +1643,9 @@ public class LWC {
     /**
      * Get the appropriate config value for the block (protections.block.node)
      *
-     * @param material
-     * @param node
-     * @return
+     * @param material The Material to get the value for
+     * @param node The node to get the value for
+     * @return String representing the configuration value
      */
     public String resolveProtectionConfiguration(Material material, String node) {
         if (material == null) {
@@ -1722,7 +1753,10 @@ public class LWC {
     }
 
     /**
-     * Register the core modules for LWC
+     * Register the core modules for LWC.
+     * 
+     * <p>Specific Modules are only loaded if their required plugin is available.<br>
+     * a specific case is for factions where the registration can fail, even when the plugin is available.
      */
     private void registerCoreModules() {
         // MCPC
@@ -1811,9 +1845,11 @@ public class LWC {
     }
 
     /**
-     * Register a module
+     * Register a module<br>
+     * The provided class instance should extend {@link com.griefcraft.scripting.Module Module} or
+     * {@link com.griefcraft.scripting.JavaModule JavaModule}.
      *
-     * @param module
+     * @param module The Module to register
      */
     private void registerModule(Module module) {
         moduleLoader.registerModule(plugin, module);
@@ -1823,24 +1859,18 @@ public class LWC {
      * Get a plugin by the name. Does not have to be enabled, and will remain
      * disabled if it is disabled.
      *
-     * @param name
-     * @return
+     * @param name The plugin to get
+     * @return The Plugin if found or null
      */
     private Plugin resolvePlugin(String name) {
-        Plugin temp = plugin.getServer().getPluginManager().getPlugin(name);
-
-        if (temp == null) {
-            return null;
-        }
-
-        return temp;
+        return plugin.getServer().getPluginManager().getPlugin(name);
     }
 
     /**
      * Merge inventories into one
      *
-     * @param blocks
-     * @return
+     * @param blocks List of blocks to merge
+     * @return Array of ItemStacks
      */
     public ItemStack[] mergeInventories(List<Block> blocks) {
         ItemStack[] stacks = new ItemStack[54];
@@ -1871,37 +1901,41 @@ public class LWC {
     /**
      * Process rights inputted for a protection and add or remove them to the given
      * protection
+     * 
+     * <p>Arguments can have one or multiple prefix to change how LWC should treat them for the Protection.<br>
+     * The following prefixes are handled <b>in order</b> and may or may not be combined with each other.
+     * <ul>
+     *     <li>{@code -} - Removes the argument from the Protection</li>
+     *     <li>{@code @} - Adds the argument with admin priviledges to the protection</li>
+     *     <li>{@code p:} - Treats the argument as a player name</li>
+     *     <li>{@code g:} - Treats the argument as a group name</li>
+     *     <li>{@code t:} / {@code town:} - Treats the argument as a Town name (Requires Towny module to be active)</li>
+     *     <li>{@code item:} - Treats the argument as an Item name</li>
+     *     <li>{@code r:} / {@code region:}- Treats the argument as a Region name (requires WorldGuard Module to be active)</li>
+     * </ul>
      *
-     * @param sender
-     * @param protection
-     * @param arguments
+     * @param sender The CommandSender that triggered this action
+     * @param protection The protection to modify
+     * @param arguments The arguments for the protection to be modified with
      */
     public void processRightsModifications(CommandSender sender, Protection protection, String... arguments) {
         // Does it match a protection type?
-        try {
-            Protection.Type protectionType = Protection.Type.matchType(arguments[0]);
-
-            if (protectionType != null) {
-
-                if (!sender.hasPermission("lwc.create." + arguments[0]) && !sender.hasPermission("lwc.create") && !sender.hasPermission("lwc.protect")) {
-                    return;
-                }
-
-                protection.setType(protectionType);
-                protection.save();
-
-                // If it's being passworded, we need to set the password
-                if (protectionType == Protection.Type.PASSWORD) {
-                    String password = StringUtil.join(arguments, 1);
-                    protection.setPassword(encrypt(password));
-                }
-
-                sendLocale(sender, "protection.typechanged", "type",
-                        plugin.getMessageParser().parseMessage(protectionType.toString().toLowerCase()));
+        Protection.Type protectionType = Protection.Type.matchType(arguments[0]);
+        if (protectionType != Protection.Type.INVALID) {
+            if (!hasPermission(sender, "lwc.create." + arguments[0], "lwc.create", "lwc.protect")) {
                 return;
             }
-        } catch (IllegalArgumentException e) {
-            // It's normal for this to be thrown if nothing was matched
+            
+            protection.setType(protectionType);
+            protection.save();
+            // If it's being passworded, we need to set the password
+            if (protectionType == Protection.Type.PASSWORD) {
+                String password = StringUtil.join(arguments, 1);
+                protection.setPassword(encrypt(password));
+            }
+            sendLocale(sender, "protection.typechanged", "type",
+                    plugin.getMessageParser().parseMessage(protectionType.toString().toLowerCase()));
+            return;
         }
 
         for (String value : arguments) {
@@ -1925,7 +1959,6 @@ public class LWC {
             }
 
             if (value.toLowerCase().startsWith("p:")) {
-                type = Permission.Type.PLAYER;
                 value = value.substring(2);
             }
 
@@ -2037,7 +2070,7 @@ public class LWC {
     /**
      * Remove all modes if the player is not in persistent mode
      *
-     * @param sender
+     * @param sender The CommandSender to remove the mode from
      */
     public void removeModes(CommandSender sender) {
         if (sender instanceof Player) {
@@ -2078,8 +2111,8 @@ public class LWC {
     /**
      * Send the simple usage of a command
      *
-     * @param player
-     * @param command
+     * @param player The CommandSender to send the message to
+     * @param command The command name to use in the message
      */
     public void sendSimpleUsage(CommandSender player, String command) {
         sendLocale(player, "help.simpleusage", "command", command);
@@ -2208,7 +2241,7 @@ public class LWC {
             boolean isOwner = protection.isOwner(player);
             boolean showMyNotices = configuration.getBoolean("core.showMyNotices", true);
 
-            if (!isOwner || (isOwner && (showMyNotices || permShowNotices))) {
+            if (!isOwner || showMyNotices || permShowNotices) {
                 String owner;
 
                 // replace your username with "you" if you own the protection

@@ -11,6 +11,8 @@ import org.bukkit.material.MaterialData;
 import org.bukkit.metadata.MetadataValue;
 import org.bukkit.plugin.Plugin;
 
+import javax.annotation.Nonnull;
+import java.util.ArrayList;
 import java.util.List;
 
 @SuppressWarnings("deprecation")
@@ -30,11 +32,13 @@ public class EntityBlockState implements BlockState {
     }
 
     @Override
+    @Nonnull
     public Block getBlock() {
         return entityBlock;
     }
 
     @Override
+    @Nonnull
     public Material getType() {
         return entityBlock.getType();
     }
@@ -45,6 +49,7 @@ public class EntityBlockState implements BlockState {
     }
 
     @Override
+    @Nonnull
     public World getWorld() {
         return entityBlock.getWorld();
     }
@@ -65,28 +70,30 @@ public class EntityBlockState implements BlockState {
     }
 
     @Override
+    @Nonnull
     public Location getLocation() {
         return entityBlock.getLocation();
     }
 
     @Override
     public Location getLocation(Location location) {
-        return entityBlock.getLocation(); // TODO: What to do with param location
+        return entityBlock.getLocation(location); // TODO: What to do with param location
     }
 
     @Override
+    @Nonnull
     public Chunk getChunk() {
         return entityBlock.getChunk();
     }
 
     @Override
-    public void setData(MaterialData materialData) {
+    public void setData(@Nonnull MaterialData materialData) {
         // Yeah, this does not work: entityBlock.setData(materialData.getData());
         // TODO: What to do with it, deprecated?
     }
 
     @Override
-    public void setType(Material material) {
+    public void setType(@Nonnull Material material) {
         entityBlock.setType(material);
     }
 
@@ -121,13 +128,14 @@ public class EntityBlockState implements BlockState {
     }
 
     @Override
-    public void setMetadata(String s, MetadataValue metadataValue) {
+    public void setMetadata(@Nonnull String s, @Nonnull MetadataValue metadataValue) {
 
     }
 
     @Override
+    @Nonnull
     public List<MetadataValue> getMetadata(String s) {
-        return null;
+        return new ArrayList<>();
     }
 
     @Override
@@ -136,25 +144,24 @@ public class EntityBlockState implements BlockState {
     }
 
     @Override
-    public void removeMetadata(String s, Plugin plugin) {
+    public void removeMetadata(@Nonnull String s, @Nonnull Plugin plugin) {
 
     }
 
     @Override
+    @Nonnull
     public BlockData getBlockData() {
-        // TODO Auto-generated method stub
-        return null;
+        return entityBlock.getBlockData();
     }
 
     @Override
-    public void setBlockData(BlockData arg0) {
-        // TODO Auto-generated method stub
+    public void setBlockData(@Nonnull BlockData arg0) {
 
     }
 
     @Override
+    @Nonnull
     public MaterialData getData() {
-        // TODO Auto-generated method stub
-        return null;
+        return new MaterialData(Material.AIR);
     }
 }

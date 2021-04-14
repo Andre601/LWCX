@@ -71,18 +71,15 @@ import java.util.Set;
 
 public class LWCBlockListener implements Listener {
 
-    /**
-     * The plugin instance
-     */
-    private LWCPlugin plugin;
+    private final LWCPlugin plugin;
+    
+    private final LWC lwc;
 
-    /**
-     * A set of blacklisted blocks
-     */
     private final Set<Material> blacklistedBlocks = new HashSet<>();
 
     public LWCBlockListener(LWCPlugin plugin) {
         this.plugin = plugin;
+        this.lwc = plugin.getLWC();
         loadAndProcessConfig();
     }
 
@@ -97,10 +94,6 @@ public class LWCBlockListener implements Listener {
 
         LWC lwc = plugin.getLWC();
         Block block = event.getBlock();
-
-        if (block == null) {
-            return;
-        }
 
         Protection protection = lwc.findProtection(block.getLocation());
 
@@ -169,10 +162,6 @@ public class LWCBlockListener implements Listener {
         LWC lwc = plugin.getLWC();
         Block block = event.getBlock();
         Player player = event.getPlayer();
-
-        if (block == null) {
-            return;
-        }
 
         Protection protection = lwc.findProtection(block.getLocation());
 
@@ -272,7 +261,6 @@ public class LWCBlockListener implements Listener {
 
     @EventHandler(ignoreCancelled = true)
     public void onBlockMultiPlace(BlockMultiPlaceEvent event) {
-        LWC lwc = plugin.getLWC();
         Block block = event.getBlock();
 
         if (block.getType().name().contains("_BED")) {
@@ -290,11 +278,9 @@ public class LWCBlockListener implements Listener {
     @EventHandler(priority = EventPriority.MONITOR)
     public void onBlockFromTo(BlockFromToEvent event) {
         Block block = event.getBlock();
-        LWC lwc = this.plugin.getLWC();
         if (block.getType() == Material.WATER && lwc.isProtectable(event.getToBlock())) {
             if (lwc.findProtection(event.getToBlock().getLocation()) != null) {
                 event.setCancelled(true);
-                return;
             }
         }
     }
@@ -304,7 +290,6 @@ public class LWCBlockListener implements Listener {
         if ((!LWC.ENABLED) || (event.isCancelled())) {
             return;
         }
-        LWC lwc = this.plugin.getLWC();
         for (Block block : event.getBlocks()) {
             Protection protection = lwc.findProtection(block);
             if (protection != null) {
@@ -321,7 +306,6 @@ public class LWCBlockListener implements Listener {
         if (!LWC.ENABLED || event.isCancelled()) {
             return;
         }
-        LWC lwc = this.plugin.getLWC();
         for (Block block : event.getBlocks()) {
             Protection protection = lwc.findProtection(block);
             if (protection != null) {
@@ -338,7 +322,6 @@ public class LWCBlockListener implements Listener {
         if (!LWC.ENABLED || event.isCancelled()) {
             return;
         }
-        LWC lwc = plugin.getLWC();
         for (Block block : event.blockList()) {
             Protection protection = plugin.getLWC().findProtection(block.getLocation());
             if (protection != null) {
@@ -356,8 +339,7 @@ public class LWCBlockListener implements Listener {
         if (!LWC.ENABLED) {
             return;
         }
-
-        LWC lwc = plugin.getLWC();
+        
         Player player = event.getPlayer();
         Block block = event.getBlockPlaced();
 
@@ -405,7 +387,6 @@ public class LWCBlockListener implements Listener {
 
     private boolean shouldBlockHopperPlacement(Player player, Block block) {
         if (block.getState() instanceof InventoryHolder) { // only care if block has an inventory
-            LWC lwc = plugin.getLWC();
             Protection protection = lwc.findProtection(block);
             if (protection != null) { // found protection
                 boolean denyHoppers = Boolean.parseBoolean(lwc.resolveProtectionConfiguration(block, "denyHoppers"));
@@ -428,7 +409,6 @@ public class LWCBlockListener implements Listener {
             return;
         }
 
-        LWC lwc = plugin.getLWC();
         Player player = event.getPlayer();
         Block block = event.getBlockPlaced();
 
@@ -479,7 +459,7 @@ public class LWCBlockListener implements Listener {
         }
 
         // Is it okay?
-        if (type == null) {
+        if (type == Protection.Type.INVALID) {
             player.sendMessage(Colors.Dark_Red + "LWC_INVALID_CONFIG_autoRegister");
             return;
         }
@@ -489,8 +469,8 @@ public class LWCBlockListener implements Listener {
         Chest chestData = null;
         try {
             chestData = (Chest) blockState.getBlockData();
-        } catch (ClassCastException e) {
-        }
+        } catch (ClassCastException ignored) {}
+        
         if (chestData != null) {
             BlockFace neighboringChestBlockFace = DoubleChestMatcher.getNeighboringChestBlockFace(chestData);
             if (neighboringChestBlockFace != null) {
@@ -532,8 +512,8 @@ public class LWCBlockListener implements Listener {
 
             if (protection != null) {
                 lwc.getModuleLoader().dispatchEvent(new LWCProtectionRegistrationPostEvent(protection));
+                protection.saveNow();
             }
-            protection.saveNow();
         } catch (Exception e) {
             lwc.sendLocale(player, "protection.internalerror", "id", "PLAYER_INTERACT");
             e.printStackTrace();
@@ -545,7 +525,7 @@ public class LWCBlockListener implements Listener {
      */
     public void loadAndProcessConfig() {
         List<String> blocks = LWC.getInstance().getConfiguration().getStringList("optional.blacklistedBlocks",
-                new ArrayList<String>());
+                new ArrayList<>());
         for (String block : blocks) {
             int legacyId;
             try {
@@ -564,14 +544,6 @@ public class LWCBlockListener implements Listener {
             }
         }
     }
-
-    /**
-     * Get the hashcode of two integers
-     *
-     * @param int1
-     * @param int2
-     * @return
-     */
     private int hashCode(int int1, int int2) {
         int hash = int1 * 17;
         hash *= 37 + int2;

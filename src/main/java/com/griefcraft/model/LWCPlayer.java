@@ -38,6 +38,7 @@ import org.bukkit.permissions.PermissionAttachment;
 import org.bukkit.permissions.PermissionAttachmentInfo;
 import org.bukkit.plugin.Plugin;
 
+import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -48,34 +49,16 @@ import java.util.UUID;
 
 public class LWCPlayer implements CommandSender {
 
-    /**
-     * The LWC instance
-     */
-    private LWC lwc;
+    private final LWC lwc;
 
-    /**
-     * The player instance
-     */
-    private Player player;
+    private final Player player;
 
-    /**
-     * Cache of LWCPlayer objects
-     */
     private final static Map<Player, LWCPlayer> playerCache = new HashMap<>();
 
-    /**
-     * The map of actions the player has
-     */
     private final Map<String, Action> actions = new HashMap<>();
 
-    /**
-     * The set of modes the player has
-     */
     private final Set<Mode> modes = new HashSet<>();
 
-    /**
-     * The set of protections the player can access
-     */
     private final Set<Protection> accessibleProtections = new HashSet<>();
 
     public LWCPlayer(LWC lwc, Player player) {
@@ -86,8 +69,8 @@ public class LWCPlayer implements CommandSender {
     /**
      * Get the LWCPlayer object from a Player object
      *
-     * @param player
-     * @return
+     * @param player The Player to get a LWCPlayer instance of
+     * @return LWCPlayer instance of the provided Player
      */
     public static LWCPlayer getPlayer(Player player) {
         if (!playerCache.containsKey(player)) {
@@ -100,7 +83,7 @@ public class LWCPlayer implements CommandSender {
     /**
      * Remove a player from the player cache
      *
-     * @param player
+     * @param player The Player to remove
      */
     public static void removePlayer(Player player) {
         getPlayer(player);
@@ -128,6 +111,7 @@ public class LWCPlayer implements CommandSender {
     /**
      * @return the player's name
      */
+    @Nonnull
     public String getName() {
         return player.getName();
     }
@@ -135,18 +119,19 @@ public class LWCPlayer implements CommandSender {
     /**
      * Required by Spigot for plugin compilation.
      *
-     * @return
+     * @return The Spigot instance
      */
     @Override
+    @Nonnull
     public Spigot spigot() {
-        return null;
+        return player.spigot();
     }
 
     /**
      * Enable a mode on the player
      *
-     * @param mode
-     * @return
+     * @param mode The mode to enable
+     * @return True if the mode was added successfully
      */
     public boolean enableMode(Mode mode) {
         return modes.add(mode);
@@ -155,8 +140,8 @@ public class LWCPlayer implements CommandSender {
     /**
      * Disable a mode on the player
      *
-     * @param mode
-     * @return
+     * @param mode The mode to disable
+     * @return True if the mode was removed successfully
      */
     public boolean disableMode(Mode mode) {
         return modes.remove(mode);
@@ -172,8 +157,8 @@ public class LWCPlayer implements CommandSender {
     /**
      * Check if the player has an action
      *
-     * @param name
-     * @return
+     * @param name The action to check for
+     * @return True if the Player has this action
      */
     public boolean hasAction(String name) {
         return actions.containsKey(name);
@@ -182,8 +167,8 @@ public class LWCPlayer implements CommandSender {
     /**
      * Get the action represented by the name
      *
-     * @param name
-     * @return
+     * @param name The name of the action to get
+     * @return The Action instance from the provided name
      */
     public Action getAction(String name) {
         return actions.get(name);
@@ -192,8 +177,8 @@ public class LWCPlayer implements CommandSender {
     /**
      * Add an action
      *
-     * @param action
-     * @return
+     * @param action The Action to add
+     * @return True
      */
     public boolean addAction(Action action) {
         actions.put(action.getName(), action);
@@ -203,8 +188,8 @@ public class LWCPlayer implements CommandSender {
     /**
      * Remove an action
      *
-     * @param action
-     * @return
+     * @param action The Action to remove
+     * @return True
      */
     public boolean removeAction(Action action) {
         actions.remove(action.getName());
@@ -221,8 +206,8 @@ public class LWCPlayer implements CommandSender {
     /**
      * Retrieve a Mode object for a player
      *
-     * @param name
-     * @return
+     * @param name The name of the mode to get
+     * @return The Mode if found or null
      */
     public Mode getMode(String name) {
         for (Mode mode : modes) {
@@ -237,8 +222,8 @@ public class LWCPlayer implements CommandSender {
     /**
      * Check if the player has the given mode
      *
-     * @param name
-     * @return
+     * @param name The Mode to check
+     * @return True if the player has the mode
      */
     public boolean hasMode(String name) {
         return getMode(name) != null;
@@ -248,35 +233,35 @@ public class LWCPlayer implements CommandSender {
      * @return the Set of modes the player has activated
      */
     public Set<Mode> getModes() {
-        return new HashSet<Mode>(modes);
+        return new HashSet<>(modes);
     }
 
     /**
      * @return the Set of actions the player has
      */
     public Map<String, Action> getActions() {
-        return new HashMap<String, Action>(actions);
+        return new HashMap<>(actions);
     }
 
     /**
      * @return a Set containing all of the action names
      */
     public Set<String> getActionNames() {
-        return new HashSet<String>(actions.keySet());
+        return new HashSet<>(actions.keySet());
     }
 
     /**
      * @return the set of protections the player can temporarily access
      */
     public Set<Protection> getAccessibleProtections() {
-        return new HashSet<Protection>(accessibleProtections);
+        return new HashSet<>(accessibleProtections);
     }
 
     /**
      * Add an accessible protection for the player
      *
-     * @param protection
-     * @return
+     * @param protection The Protection to add
+     * @return True if the Protection was added successfully
      */
     public boolean addAccessibleProtection(Protection protection) {
         return accessibleProtections.add(protection);
@@ -285,8 +270,8 @@ public class LWCPlayer implements CommandSender {
     /**
      * Remove an accessible protection from the player
      *
-     * @param protection
-     * @return
+     * @param protection The Protection to remove
+     * @return True if the Protection was removed successfully
      */
     public boolean removeAccessibleProtection(Protection protection) {
         return accessibleProtections.remove(protection);
@@ -302,7 +287,7 @@ public class LWCPlayer implements CommandSender {
     /**
      * Create a History object that is attached to this protection
      *
-     * @return
+     * @return The created History Object
      */
     public History createHistoryObject() {
         History history = new History();
@@ -316,8 +301,8 @@ public class LWCPlayer implements CommandSender {
     /**
      * Send a locale to the player
      *
-     * @param key
-     * @param args
+     * @param key The key to get the language String from
+     * @param args Key-value pair to parse
      */
     public void sendLocale(String key, Object... args) {
         lwc.sendLocale(player, key, args);
@@ -326,7 +311,7 @@ public class LWCPlayer implements CommandSender {
     /**
      * Get the player's history
      *
-     * @return
+     * @return List of History instances for this Player
      */
     public List<History> getRelatedHistory() {
         return lwc.getPhysicalDatabase().loadHistory(player);
@@ -335,8 +320,8 @@ public class LWCPlayer implements CommandSender {
     /**
      * Get the player's history for a given page
      *
-     * @param page
-     * @return
+     * @param page The page to get History instances for
+     * @return List of History instances for this player and for the set page
      */
     public List<History> getRelatedHistory(int page) {
         return lwc.getPhysicalDatabase().loadHistory(player, (page - 1) * HistoryModule.ITEMS_PER_PAGE, HistoryModule.ITEMS_PER_PAGE);
@@ -345,8 +330,8 @@ public class LWCPlayer implements CommandSender {
     /**
      * Get the player's history pertaining to the type
      *
-     * @param type
-     * @return
+     * @param type The type to get History instances for
+     * @return List of History instances for this player and the provided History Type
      */
     public List<History> getRelatedHistory(History.Type type) {
         List<History> related = new ArrayList<>();
@@ -360,7 +345,7 @@ public class LWCPlayer implements CommandSender {
         return related;
     }
 
-    public void sendMessage(String s) {
+    public void sendMessage(@Nonnull String s) {
         player.sendMessage(s);
     }
 
@@ -371,59 +356,63 @@ public class LWCPlayer implements CommandSender {
     }
 
     @Override
-    public void sendMessage(UUID uuid, String s) {
+    public void sendMessage(UUID uuid, @Nonnull String s) {
         player.sendMessage(player.getUniqueId(), s);
     }
 
     @Override
-    public void sendMessage(UUID uuid, String[] strings) {
+    public void sendMessage(UUID uuid, @Nonnull String[] strings) {
         player.sendMessage(player.getUniqueId(), strings);
     }
-
+    
+    @Nonnull
     public Server getServer() {
         return player.getServer();
     }
 
-    public boolean isPermissionSet(String s) {
+    public boolean isPermissionSet(@Nonnull String s) {
         return player.isPermissionSet(s);
     }
 
-    public boolean isPermissionSet(Permission permission) {
+    public boolean isPermissionSet(@Nonnull Permission permission) {
         return player.isPermissionSet(permission);
     }
 
-    public boolean hasPermission(String s) {
+    public boolean hasPermission(@Nonnull String s) {
         return player.hasPermission(s);
     }
 
-    public boolean hasPermission(Permission permission) {
+    public boolean hasPermission(@Nonnull Permission permission) {
         return player.hasPermission(permission);
     }
-
-    public PermissionAttachment addAttachment(Plugin plugin, String s, boolean b) {
+    
+    @Nonnull
+    public PermissionAttachment addAttachment(@Nonnull Plugin plugin, @Nonnull String s, boolean b) {
         return player.addAttachment(plugin, s, b);
     }
-
-    public PermissionAttachment addAttachment(Plugin plugin) {
+    
+    @Nonnull
+    public PermissionAttachment addAttachment(@Nonnull Plugin plugin) {
         return player.addAttachment(plugin);
     }
 
-    public PermissionAttachment addAttachment(Plugin plugin, String s, boolean b, int i) {
+    public PermissionAttachment addAttachment(@Nonnull Plugin plugin, @Nonnull String s, boolean b, int i) {
         return player.addAttachment(plugin, s, b, i);
     }
 
-    public PermissionAttachment addAttachment(Plugin plugin, int i) {
+    public PermissionAttachment addAttachment(@Nonnull Plugin plugin, int i) {
         return player.addAttachment(plugin, i);
     }
 
-    public void removeAttachment(PermissionAttachment permissionAttachment) {
+    public void removeAttachment(@Nonnull PermissionAttachment permissionAttachment) {
         player.removeAttachment(permissionAttachment);
     }
 
     public void recalculatePermissions() {
         player.recalculatePermissions();
     }
-
+    
+    @Nonnull
     public Set<PermissionAttachmentInfo> getEffectivePermissions() {
         return player.getEffectivePermissions();
     }

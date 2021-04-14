@@ -19,7 +19,9 @@ import org.bukkit.util.BoundingBox;
 import org.bukkit.util.RayTraceResult;
 import org.bukkit.util.Vector;
 
+import javax.annotation.Nonnull;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 public class EntityBlock implements Block {
@@ -53,6 +55,7 @@ public class EntityBlock implements Block {
     }
 
     @Override
+    @Nonnull
     public World getWorld() {
         return EntityBlock.entity.getWorld();
     }
@@ -66,22 +69,23 @@ public class EntityBlock implements Block {
     }
 
     @Override
-    public List<MetadataValue> getMetadata(String s) {
+    @Nonnull
+    public List<MetadataValue> getMetadata(@Nonnull String s) {
         return entity.getMetadata(s);
     }
 
     @Override
-    public boolean hasMetadata(String s) {
+    public boolean hasMetadata(@Nonnull String s) {
         return entity.hasMetadata(s);
     }
 
     @Override
-    public void removeMetadata(String s, Plugin p) {
+    public void removeMetadata(@Nonnull String s, @Nonnull Plugin p) {
         entity.removeMetadata(s, p);
     }
 
     @Override
-    public void setMetadata(String s, MetadataValue mv) {
+    public void setMetadata(@Nonnull String s, @Nonnull MetadataValue mv) {
         entity.setMetadata(s, mv);
     }
 
@@ -96,32 +100,30 @@ public class EntityBlock implements Block {
     }
 
     @Override
-    public boolean applyBoneMeal(BlockFace blockFace) {
+    public boolean applyBoneMeal(@Nonnull BlockFace blockFace) {
         return false;
     }
 
     @Override
+    @Nonnull
     public Biome getBiome() {
-        // TODO Auto-generated method stub
-        return null;
+        return Biome.PLAINS; // Biome doesn't matter at all, so just return plains
     }
 
     @Override
     public int getBlockPower() {
-        // TODO Auto-generated method stub
         return 0;
     }
 
     @Override
-    public int getBlockPower(BlockFace arg0) {
-        // TODO Auto-generated method stub
+    public int getBlockPower(@Nonnull BlockFace arg0) {
         return 0;
     }
 
     @Override
+    @Nonnull
     public Chunk getChunk() {
-        // TODO Auto-generated method stub
-        return null;
+        return EntityBlock.entity.getLocation().getChunk();
     }
 
     @Override
@@ -130,20 +132,21 @@ public class EntityBlock implements Block {
     }
 
     @Override
+    @Nonnull
     public Collection<ItemStack> getDrops() {
-        // TODO Auto-generated method stub
-        return null;
+        return Collections.emptyList();
     }
 
     @Override
+    @Nonnull
     public Collection<ItemStack> getDrops(ItemStack arg0) {
-        // TODO Auto-generated method stub
-        return null;
+        return Collections.emptyList();
     }
 
     @Override
-    public Collection<ItemStack> getDrops(ItemStack itemStack, Entity entity) {
-        return null;
+    @Nonnull
+    public Collection<ItemStack> getDrops(@Nonnull ItemStack itemStack, Entity entity) {
+        return Collections.emptyList();
     }
 
     @Override
@@ -152,46 +155,43 @@ public class EntityBlock implements Block {
     }
 
     @Override
-    public RayTraceResult rayTrace(Location location, Vector vector, double v, FluidCollisionMode fluidCollisionMode) {
+    public RayTraceResult rayTrace(@Nonnull Location location, @Nonnull Vector vector, double v, @Nonnull FluidCollisionMode fluidCollisionMode) {
         return null;
     }
 
     @Override
+    @Nonnull
     public BoundingBox getBoundingBox() {
-        return null;
+        return EntityBlock.entity.getBoundingBox();
     }
 
     @Override
-    public BlockFace getFace(Block arg0) {
-        // TODO Auto-generated method stub
+    public BlockFace getFace(@Nonnull Block arg0) {
         return null;
     }
 
     @Override
     public double getHumidity() {
-        // TODO Auto-generated method stub
         return 0;
     }
 
     @Override
     public byte getLightFromBlocks() {
-        // TODO Auto-generated method stub
         return 0;
     }
 
     @Override
     public byte getLightFromSky() {
-        // TODO Auto-generated method stub
         return 0;
     }
 
     @Override
     public byte getLightLevel() {
-        // TODO Auto-generated method stub
         return 0;
     }
 
     @Override
+    @Nonnull
     public Location getLocation() {
         return entity.getLocation();
     }
@@ -202,41 +202,42 @@ public class EntityBlock implements Block {
     }
 
     @Override
+    @Nonnull
     public PistonMoveReaction getPistonMoveReaction() {
-        // TODO Auto-generated method stub
-        return null;
+        return EntityBlock.entity.getPistonMoveReaction();
     }
 
     @Override
-    public Block getRelative(BlockFace arg0) {
-        // TODO Auto-generated method stub
+    @Nonnull
+    public Block getRelative(@Nonnull BlockFace arg0) {
         return this;
     }
 
     @Override
-    public Block getRelative(BlockFace arg0, int arg1) {
-        // TODO Auto-generated method stub
+    @Nonnull
+    public Block getRelative(@Nonnull BlockFace arg0, int arg1) {
         return this;
     }
 
     @Override
+    @Nonnull
     public Block getRelative(int arg0, int arg1, int arg2) {
-        // TODO Auto-generated method stub
         return this;
     }
 
     @Override
+    @Nonnull
     public BlockState getState() {
         return new EntityBlockState(this);
     }
 
     @Override
     public double getTemperature() {
-        // TODO Auto-generated method stub
         return 0;
     }
 
     @Override
+    @Nonnull
     public Material getType() {
         // Temporary fix to avoid null pointer exceptions when using /lock on entities.
         // Entity protections are still locked under ENTITY_BLOCK_ID, not AIR.
@@ -244,73 +245,53 @@ public class EntityBlock implements Block {
     }
 
     @Override
-    public boolean isBlockFaceIndirectlyPowered(BlockFace arg0) {
-        // TODO Auto-generated method stub
+    public boolean isBlockFaceIndirectlyPowered(@Nonnull BlockFace arg0) {
         return false;
     }
 
     @Override
-    public boolean isBlockFacePowered(BlockFace arg0) {
-        // TODO Auto-generated method stub
+    public boolean isBlockFacePowered(@Nonnull BlockFace arg0) {
         return false;
     }
 
     @Override
     public boolean isBlockIndirectlyPowered() {
-        // TODO Auto-generated method stub
         return false;
     }
 
     @Override
     public boolean isBlockPowered() {
-        // TODO Auto-generated method stub
         return false;
     }
 
     @Override
     public boolean isEmpty() {
-        // TODO Auto-generated method stub
         return false;
     }
 
     @Override
     public boolean isLiquid() {
-        // TODO Auto-generated method stub
         return false;
     }
 
     @Override
-    public void setBiome(Biome arg0) {
-        // TODO Auto-generated method stub
-
-    }
+    public void setBiome(@Nonnull Biome arg0) {}
 
     @Override
-    public void setType(Material arg0) {
-        // TODO Auto-generated method stub
+    public void setType(@Nonnull Material arg0) {}
 
-    }
-
-    public void setType(Material arg0, boolean arg1) {
-        // TODO Auto-generated method stub
-    }
+    public void setType(@Nonnull Material arg0, boolean arg1) {}
 
 
     @Override
+    @Nonnull
     public BlockData getBlockData() {
-        // TODO Auto-generated method stub
-        return null;
+        return Material.AIR.createBlockData();
     }
 
     @Override
-    public void setBlockData(BlockData arg0) {
-        // TODO Auto-generated method stub
-
-    }
+    public void setBlockData(@Nonnull BlockData arg0) {}
 
     @Override
-    public void setBlockData(BlockData arg0, boolean arg1) {
-        // TODO Auto-generated method stub
-
-    }
+    public void setBlockData(@Nonnull BlockData arg0, boolean arg1) {}
 }

@@ -38,13 +38,7 @@ import java.util.List;
 
 public class SuperPermsPermissions implements IPermissions {
 
-    /**
-     * The group prefix to use to lookup in Permissions - can be overrided in core.yml with groupPrefix: 'new.prefix.'
-     * Must include leading period (.)
-     * <p/>
-     * Default: lwc.group.
-     */
-    private String groupPrefix;
+    private final String groupPrefix;
 
     public SuperPermsPermissions() {
         groupPrefix = LWC.getInstance().getConfiguration().getString("core.groupPrefix", "group.");

@@ -59,10 +59,7 @@ import java.util.UUID;
 
 public class LWCEntityListener implements Listener {
 
-    /**
-     * The plugin instance
-     */
-    private LWCPlugin plugin;
+    private final LWCPlugin plugin;
 
     private UUID placedArmorStandPlayer;
 
@@ -258,7 +255,7 @@ public class LWCEntityListener implements Listener {
         }
 
         // Is it okay?
-        if (type == null) {
+        if (type == Protection.Type.INVALID) {
             player.sendMessage(Colors.Dark_Red + "LWC_INVALID_CONFIG_autoRegister");
             return;
         }

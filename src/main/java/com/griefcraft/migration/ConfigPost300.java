@@ -39,7 +39,7 @@ import java.util.*;
 import java.util.logging.Logger;
 
 public class ConfigPost300 implements MigrationUtility {
-    private static Logger logger = Logger.getLogger("Patcher");
+    private final static Logger logger = Logger.getLogger("Patcher");
 
     // contains the core config equivalent key pairs
     // e.g locale->core.locale
@@ -105,8 +105,7 @@ public class ConfigPost300 implements MigrationUtility {
 
                 try {
                     blockId = Integer.parseInt(protection);
-                } catch (NumberFormatException e) {
-                }
+                } catch (NumberFormatException ignored) {}
 
                 // if it's an int, convert it
                 if (blockId > 0) {

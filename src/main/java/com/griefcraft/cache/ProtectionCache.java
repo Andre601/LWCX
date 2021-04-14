@@ -36,67 +36,28 @@ import org.bukkit.block.BlockState;
 
 public class ProtectionCache {
 
-    /**
-     * The amount the cache is increased by each time a high-intensity area
-     * requests it if needed
-     */
     private final static int ADAPTIVE_CACHE_TICK = 10;
 
-    /**
-     * The max number of protections the adaptive cache will add
-     */
     private final static int ADAPTIVE_CACHE_MAX = 100000;
 
-    /**
-     * The LWC instance this set belongs to
-     */
     private final LWC lwc;
 
-    /**
-     * Hard references to protections still cached
-     */
     private final LRUCache<Protection, Object> references;
 
-    /**
-     * Weak references to protections and their cache key
-     * (protection.getCacheKey())
-     */
     private final WeakLRUCache<String, Protection> byCacheKey;
 
-    /**
-     * Weak references to protections and their protection id
-     */
     private final WeakLRUCache<Integer, Protection> byId;
 
-    /**
-     * A block that isn't the protected block itself but matches it in a
-     * protection matcher
-     */
     private final WeakLRUCache<String, Protection> byKnownBlock;
 
-    /**
-     * A cache of blocks that are known to not have a protection
-     */
     private final LRUCache<String, Object> byKnownNulls;
 
-    /**
-     * The capacity of the cache
-     */
-    private int capacity;
+    private final int capacity;
 
-    /**
-     * The number of protections that were added via adaptive cache
-     */
     private int adaptiveCapacity = 0;
 
-    /**
-     * The method counter
-     */
     private final MethodCounter counter = new MethodCounter();
 
-    /**
-     * Used for byKnownNulls
-     */
     private final static Object FAKE_VALUE = new Object();
 
     public ProtectionCache(LWC lwc) {
@@ -126,7 +87,7 @@ public class ProtectionCache {
     /**
      * Gets the direct reference of the references cache
      *
-     * @return
+     * @return Instance of the LRUCache
      */
     public LRUCache<Protection, Object> getReferences() {
         return references;
@@ -135,7 +96,7 @@ public class ProtectionCache {
     /**
      * Get the method counter for this class
      *
-     * @return
+     * @return Instance of the MethodCounter
      */
     public MethodCounter getMethodCounter() {
         return counter;
@@ -144,7 +105,7 @@ public class ProtectionCache {
     /**
      * Gets the default capacity of the cache
      *
-     * @return
+     * @return int representing the current capacity of the cache
      */
     public int capacity() {
         return capacity;
@@ -153,7 +114,7 @@ public class ProtectionCache {
     /**
      * Gets the adaptive capacity of the cache
      *
-     * @return
+     * @return int representing the current capacity of the adaptive cache
      */
     public int adaptiveCapacity() {
         return adaptiveCapacity;
@@ -162,7 +123,7 @@ public class ProtectionCache {
     /**
      * Gets the total capacity (default + adaptive) of the cache
      *
-     * @return
+     * @return int representing the current total capacity of default and adaptive cache combined
      */
     public int totalCapacity() {
         return capacity + adaptiveCapacity;
@@ -185,7 +146,7 @@ public class ProtectionCache {
     /**
      * Check if the cache is full
      *
-     * @return
+     * @return True if the cache is full
      */
     public boolean isFull() {
         return references.size() >= totalCapacity();
@@ -194,16 +155,17 @@ public class ProtectionCache {
     /**
      * Gets the amount of protections that are cached
      *
-     * @return
+     * @return int representing the current size of the cache
      */
     public int size() {
         return references.size();
     }
 
     /**
-     * Cache a protection
+     * Cache a protection<br>
+     * This method does nothing if the provided Protection instance is null
      *
-     * @param protection
+     * @param protection The protection to cache
      */
     public void addProtection(Protection protection) {
         if (protection == null) {
@@ -236,7 +198,7 @@ public class ProtectionCache {
     /**
      * Remove the protection from the cache
      *
-     * @param protection
+     * @param protection The protection instance to remove
      */
     public void removeProtection(Protection protection) {
         counter.increment("removeProtection");
@@ -260,7 +222,7 @@ public class ProtectionCache {
     /**
      * Remove the given cache key from any caches
      *
-     * @param cacheKey
+     * @param cacheKey The key of the cache entry to remove from all caches
      */
     public void remove(String cacheKey) {
         byCacheKey.remove(cacheKey);
@@ -269,9 +231,10 @@ public class ProtectionCache {
     }
 
     /**
-     * Make a cache key known as null in the cache
+     * Make a cache key known as null in the cache<br>
+     * This will add the provided key with a default fake value to the list of known nulls
      *
-     * @param cacheKey
+     * @param cacheKey The key to be added to the list of known nulls
      */
     public void addKnownNull(String cacheKey) {
         counter.increment("addKnownNull");
@@ -281,8 +244,8 @@ public class ProtectionCache {
     /**
      * Check if a cache key is known to not exist in the database
      *
-     * @param cacheKey
-     * @return
+     * @param cacheKey The key to check
+     * @return True if the provided key is in the list of known nulls
      */
     public boolean isKnownNull(String cacheKey) {
         counter.increment("isKnownNull");
@@ -292,8 +255,8 @@ public class ProtectionCache {
     /**
      * Get a protection in the cache via its cache key
      *
-     * @param cacheKey
-     * @return
+     * @param cacheKey The key to get the Protection instance from
+     * @return Protection instance from the provided key
      */
     public Protection getProtection(String cacheKey) {
         counter.increment("getProtection");
@@ -312,8 +275,8 @@ public class ProtectionCache {
     /**
      * Get a protection in the cache located on the given block
      *
-     * @param block
-     * @return
+     * @param block The block to get the Protection from
+     * @return Protection instance of the provided block
      */
     public Protection getProtection(Block block) {
         return getProtection(cacheKey(block.getWorld().getName(), block.getX(),
@@ -323,8 +286,8 @@ public class ProtectionCache {
     /**
      * Check if the known block protection cache contains the given key
      *
-     * @param block
-     * @return
+     * @param block Block to check protection for
+     * @return True if the checked block has a known Protection
      */
     public boolean isKnownBlock(Block block) {
         counter.increment("isKnownBlock");
@@ -335,8 +298,8 @@ public class ProtectionCache {
     /**
      * Get a protection in the cache via its id
      *
-     * @param id
-     * @return
+     * @param id The id to get the protection for
+     * @return Protection instance of the provided id
      */
     public Protection getProtectionById(int id) {
         counter.increment("getProtectionById");
@@ -346,8 +309,8 @@ public class ProtectionCache {
     /**
      * Gets the cache key for the given location
      *
-     * @param location
-     * @return
+     * @param location Location to get the key for
+     * @return String representing the key for the provided location
      */
     public String cacheKey(Location location) {
         return cacheKey(location.getWorld().getName(), location.getBlockX(),
@@ -357,20 +320,16 @@ public class ProtectionCache {
     /**
      * Generate a cache key using the given data
      *
-     * @param world
-     * @param x
-     * @param y
-     * @param z
-     * @return
+     * @param world The world name to use for the key
+     * @param x The X coordinate to use for the key
+     * @param y The Y coordinate to use for the key
+     * @param z The Z coordinate to use for the key
+     * @return String in the format {@literal <world>:<x>:<y>:<z>}
      */
     public String cacheKey(String world, int x, int y, int z) {
         return world + ":" + x + ":" + y + ":" + z;
     }
 
-    /**
-     * Fixes the internal caches and adjusts them to the new cache total
-     * capacity
-     */
     private void adjustCacheSizes() {
         references.maxCapacity = totalCapacity();
         byCacheKey.maxCapacity = totalCapacity();

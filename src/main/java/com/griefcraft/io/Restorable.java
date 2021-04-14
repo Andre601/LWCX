@@ -32,16 +32,25 @@ public interface Restorable {
 
     /**
      * Get the restorable type
-     * <p>
-     * TODO Enum
      *
-     * @return
+     * @return int representing the type
+     * 
+     * @deprecated Use {@link #getBackupType() getBackupType}
      */
-    public int getType();
-
+    @Deprecated
+    int getType();
+    
+    /**
+     * The Type of Backup this restorable is.
+     * 
+     * <!-- Was added to make Hidendra's enum wish true :) -->
+     * @return The Backup type this Restorable represents
+     */
+    BackupType getBackupType();
+    
     /**
      * Restore the object into the world
      */
-    public void restore();
+    void restore();
 
 }

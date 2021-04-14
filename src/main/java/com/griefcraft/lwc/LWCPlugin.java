@@ -52,9 +52,11 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import javax.annotation.Nonnull;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -88,7 +90,7 @@ public class LWCPlugin extends JavaPlugin {
     private Updater updater;
 
     @Override
-    public boolean onCommand(CommandSender sender, Command command, String commandLabel, String[] args) {
+    public boolean onCommand(@Nonnull CommandSender sender, Command command, @Nonnull String commandLabel, @Nonnull String[] args) {
         String commandName = command.getName().toLowerCase();
         String argString = StringUtil.join(args, 0);
         boolean isPlayer = (sender instanceof Player); // check if they're a
@@ -100,78 +102,121 @@ public class LWCPlugin extends JavaPlugin {
             // Aliases
             String aliasCommand = null;
             String[] aliasArgs = new String[0];
-
-            if (commandName.equals("cpublic")) {
-                aliasCommand = "create";
-                aliasArgs = new String[]{"public"};
-            } else if (commandName.equals("cpassword")) {
-                aliasCommand = "create";
-                aliasArgs = ("password " + argString).split(" ");
-            } else if (commandName.equals("cprivate") || commandName.equals("lock")) {
-                aliasCommand = "create";
-                aliasArgs = ("private " + argString).split(" ");
-            } else if (commandName.equals("cdonation")) {
-                aliasCommand = "create";
-                aliasArgs = ("donation " + argString).split(" ");
-            } else if (commandName.equals("cdisplay")) {
-                aliasCommand = "create";
-                aliasArgs = ("display " + argString).split(" ");
-            } else if (commandName.equals("cmodify")) {
-                aliasCommand = "modify";
-                aliasArgs = argString.isEmpty() ? new String[0] : argString.split(" ");
-            } else if (commandName.equals("cinfo")) {
-                aliasCommand = "info";
-            } else if (commandName.equals("cunlock")) {
-                aliasCommand = "unlock";
-                aliasArgs = argString.isEmpty() ? new String[0] : argString.split(" ");
-            } else if (commandName.equals("cremove") || commandName.equals("unlock")) {
-                aliasCommand = "remove";
-                aliasArgs = new String[]{"protection"};
-            } else if (commandName.equals("climits")) {
-                aliasCommand = "limits";
-                aliasArgs = argString.isEmpty() ? new String[0] : argString.split(" ");
-            } else if (commandName.equals("cadmin")) {
-                aliasCommand = "admin";
-                aliasArgs = argString.isEmpty() ? new String[0] : argString.split(" ");
-            } else if (commandName.equals("cremoveall")) {
-                aliasCommand = "remove";
-                aliasArgs = new String[]{"allprotections"};
+            
+            switch (commandName) {
+                case "cpublic":
+                    aliasCommand = "create";
+                    aliasArgs = new String[]{"public"};
+                    break;
+                    
+                case "cpassword":
+                    aliasCommand = "create";
+                    aliasArgs = ("password " + argString).split(" ");
+                    break;
+                    
+                case "cprivate":
+                case "lock":
+                    aliasCommand = "create";
+                    aliasArgs = ("private " + argString).split(" ");
+                    break;
+                    
+                case "cdonation":
+                    aliasCommand = "create";
+                    aliasArgs = ("donation " + argString).split(" ");
+                    break;
+                    
+                case "cdisplay":
+                    aliasCommand = "create";
+                    aliasArgs = ("display " + argString).split(" ");
+                    break;
+                
+                case "cmodify":
+                    aliasCommand = "modify";
+                    aliasArgs = argString.isEmpty() ? new String[0] : argString.split(" ");
+                    break;
+                
+                case "cinfo":
+                    aliasCommand = "info";
+                    break;
+                    
+                case "cunlock":
+                    aliasCommand = "unlock";
+                    aliasArgs = argString.isEmpty() ? new String[0] : argString.split(" ");
+                    break;
+                
+                case "cremove":
+                case "unlock":
+                    aliasCommand = "remove";
+                    aliasArgs = new String[]{"protection"};
+                    break;
+                
+                case "climits":
+                    aliasCommand = "limits";
+                    aliasArgs = argString.isEmpty() ? new String[0] : argString.split(" ");
+                    break;
+                
+                case "cadmin":
+                    aliasCommand = "admin";
+                    aliasArgs = argString.isEmpty() ? new String[0] : argString.split(" ");
+                    break;
+                
+                case "cremoveall":
+                    aliasCommand = "remove";
+                    aliasArgs = new String[]{"allprotections"};
             }
 
             // Flag aliases
-            if (commandName.equals("credstone")) {
-                aliasCommand = "flag";
-                aliasArgs = ("redstone " + argString).split(" ");
-            } else if (commandName.equals("cmagnet")) {
-                aliasCommand = "flag";
-                aliasArgs = ("magnet " + argString).split(" ");
-            } else if (commandName.equals("cexempt")) {
-                aliasCommand = "flag";
-                aliasArgs = ("exemption " + argString).split(" ");
-            } else if (commandName.equals("cautoclose")) {
-                aliasCommand = "flag";
-                aliasArgs = ("autoclose " + argString).split(" ");
-            } else if (commandName.equals("callowexplosions") || commandName.equals("ctnt")) {
-                aliasCommand = "flag";
-                aliasArgs = ("allowexplosions " + argString).split(" ");
-            } else if (commandName.equals("chopper")) {
-                aliasCommand = "flag";
-                aliasArgs = ("hopper " + argString).split(" ");
+            switch (commandName) {
+                case "credstone":
+                    aliasCommand = "flag";
+                    aliasArgs = ("redstone " + argString).split(" ");
+                    break;
+                    
+                case "cmagnet":
+                    aliasCommand = "flag";
+                    aliasArgs = ("magnet " + argString).split(" ");
+                    break;
+                    
+                case "cexempt":
+                    aliasCommand = "flag";
+                    aliasArgs = ("exemption " + argString).split(" ");
+                    break;
+                    
+                case "cautoclose":
+                    aliasCommand = "flag";
+                    aliasArgs = ("autoclose " + argString).split(" ");
+                    break;
+                    
+                case "callowexplosions":
+                case "ctnt":
+                    aliasCommand = "flag";
+                    aliasArgs = ("allowexplosions " + argString).split(" ");
+                    break;
+                    
+                case "chopper":
+                    aliasCommand = "flag";
+                    aliasArgs = ("hopper " + argString).split(" ");
+                    break;
             }
 
             // Mode aliases
-            if (commandName.equals("cdroptransfer")) {
-                aliasCommand = "mode";
-                aliasArgs = ("droptransfer " + argString).split(" ");
-            } else if (commandName.equals("cpersist")) {
-                aliasCommand = "mode";
-                aliasArgs = ("persist " + argString).split(" ");
-            } else if (commandName.equals("cnospam")) {
-                aliasCommand = "mode";
-                aliasArgs = ("nospam " + argString).split(" ");
-            } else if (commandName.equals("cnolock")) {
-                aliasCommand = "mode";
-                aliasArgs = ("nolock " + argString).split(" ");
+            switch (commandName) {
+                case "cdroptransfer":
+                    aliasCommand = "mode";
+                    aliasArgs = ("droptransfer " + argString).split(" ");
+                    break;
+                case "cpersist":
+                    aliasCommand = "mode";
+                    aliasArgs = ("persist " + argString).split(" ");
+                    break;
+                case "cnospam":
+                    aliasCommand = "mode";
+                    aliasArgs = ("nospam " + argString).split(" ");
+                    break;
+                case "cnolock":
+                    aliasCommand = "mode";
+                    aliasArgs = ("nolock " + argString).split(" ");
+                    break;
             }
 
             if (aliasCommand != null) {
@@ -206,7 +251,7 @@ public class LWCPlugin extends JavaPlugin {
     }
 
     @Override
-    public List<String> onTabComplete(CommandSender sender, Command command, String label, String[] args) {
+    public List<String> onTabComplete(@Nonnull CommandSender sender, @Nonnull Command command, String label, String[] args) {
         String currentArg = args[args.length - 1];
         switch (label) {
             case "lwc":
@@ -424,7 +469,9 @@ public class LWCPlugin extends JavaPlugin {
 
         File localeDir = new File(this.getDataFolder() + File.separator + "locale");
         if (!localeDir.exists()) {
-            localeDir.mkdir();
+            if (!localeDir.mkdir()) {
+                getLogger().warning("Couldn't create Locale directory!");
+            }
         }
 
         // located in plugins/LWC/locale/, values in that overrides the ones in
@@ -438,14 +485,13 @@ public class LWCPlugin extends JavaPlugin {
 
             // Attempt to load the default locale
             defaultBundle = new PropertyResourceBundle(
-                    new InputStreamReader(file.getInputStream(file.getJarEntry("lang/lwc_en.properties")), "UTF-8"));
+                    new InputStreamReader(file.getInputStream(file.getJarEntry("lang/lwc_en.properties")), StandardCharsets.UTF_8));
             locale = new LWCResourceBundle(defaultBundle);
 
             try {
                 optionalBundle = ResourceBundle.getBundle("lwc", new Locale(localization), new LocaleClassLoader(),
                         new UTF8Control());
-            } catch (MissingResourceException e) {
-            }
+            } catch (MissingResourceException ignored) {}
 
             if (optionalBundle != null) {
                 locale.addExtensionBundle(optionalBundle);
@@ -455,11 +501,8 @@ public class LWCPlugin extends JavaPlugin {
             // exists
             try {
                 optionalBundle = new PropertyResourceBundle(new InputStreamReader(
-                        file.getInputStream(file.getJarEntry("lang/lwc_" + localization + ".properties")), "UTF-8"));
-            } catch (MissingResourceException e) {
-            } catch (NullPointerException e) {
-                // file wasn't found :p - that's ok
-            }
+                        file.getInputStream(file.getJarEntry("lang/lwc_" + localization + ".properties")), StandardCharsets.UTF_8));
+            } catch (MissingResourceException | NullPointerException ignored) {}
 
             // ensure both bundles aren't the same
             if (defaultBundle == optionalBundle) {
@@ -492,7 +535,7 @@ public class LWCPlugin extends JavaPlugin {
     /**
      * Log a string to the console
      *
-     * @param str
+     * @param str The String to log
      */
     private void log(String str) {
         getLogger().info(str);
@@ -540,7 +583,7 @@ public class LWCPlugin extends JavaPlugin {
     /**
      * Gets the message parser
      *
-     * @return
+     * @return The MessageParser instance
      */
     public MessageParser getMessageParser() {
         return messageParser;
@@ -554,6 +597,7 @@ public class LWCPlugin extends JavaPlugin {
     }
 
     @Override
+    @Nonnull
     public File getFile() {
         return super.getFile();
     }

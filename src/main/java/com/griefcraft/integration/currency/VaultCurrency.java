@@ -37,18 +37,12 @@ import org.bukkit.plugin.RegisteredServiceProvider;
 @SuppressWarnings("deprecation")
 public class VaultCurrency implements ICurrency {
 
-    /**
-     * The economy services handler
-     */
     private Economy economy;
 
     public VaultCurrency() {
         checkEconomy();
     }
 
-    /**
-     * Check for an economy providor and set it if it was found
-     */
     private void checkEconomy() {
         RegisteredServiceProvider<Economy> serviceProvider = Bukkit.getServer().getServicesManager().getRegistration(Economy.class);
 

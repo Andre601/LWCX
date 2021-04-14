@@ -43,52 +43,30 @@ import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 public class Backup {
+    
+    private final OperationMode operationMode;
+    
+    private int revision;
+    
+    private long created;
+    
+    private DataInputStream inputStream;
+    
+    private DataOutputStream outputStream;
 
     /**
      * The backup file's current revision
      */
     public static final int CURRENT_REVISION = 1;
 
-    /**
-     * The operations the backup is allowed to perform
-     */
-    public enum OperationMode {
-        READ, WRITE
-    }
-
-    /**
-     * The operationMode we are allowed to perform
-     */
-    private final OperationMode operationMode;
-
-    /**
-     * This backup's revision number
-     */
-    private int revision;
-
-    /**
-     * The time the backup was created it
-     */
-    private long created;
-
-    /**
-     * The backup's input stream if we are reading
-     */
-    private DataInputStream inputStream;
-
-    /**
-     * The backup's output stream if we are writing
-     */
-    private DataOutputStream outputStream;
-
-    @SuppressWarnings("resource")
     public Backup(File file, OperationMode operationMode, EnumSet<BackupManager.Flag> flags) throws IOException {
         this.operationMode = operationMode;
         if (!file.exists()) {
             if (operationMode == OperationMode.READ) {
                 throw new UnsupportedOperationException("The backup could not be read");
             } else {
-                file.createNewFile();
+                if(!file.createNewFile())
+                    throw new IllegalStateException("Couldn't create file!");
             }
         }
 
@@ -114,71 +92,72 @@ public class Backup {
     /**
      * Read an entity from the backup file
      *
-     * @return
+     * @return Restorable instance or null
+     * @throws IOException When the provided InputStream cannot be read
+     * @throws UnsupportedOperationException when the 
      */
     protected Restorable readRestorable() throws IOException {
         if (operationMode != OperationMode.READ) {
             throw new UnsupportedOperationException("READ is not allowed on this backup.");
         }
-
-        // The object type
-        int type = (byte) inputStream.read();
-
-        // EOF
-        if (type == -1) {
-            return null;
+        
+        int type = inputStream.read();
+        switch (BackupType.getByInt(type)) {
+            case EOF:
+                return null;
+            
+            case PROTECTION:
+                RestorableProtection rprotection = new RestorableProtection();
+                rprotection.setId(inputStream.readInt());
+                rprotection.setProtectionType(inputStream.readByte());
+                rprotection.setBlockId(inputStream.readShort());
+                rprotection.setOwner(inputStream.readUTF());
+                rprotection.setWorld(inputStream.readUTF());
+                rprotection.setX(inputStream.readInt());
+                rprotection.setY(inputStream.readShort());
+                rprotection.setZ(inputStream.readInt());
+                rprotection.setCreated(inputStream.readLong());
+                rprotection.setUpdated(inputStream.readLong());
+    
+                return rprotection;
+            
+            case BLOCK:
+                RestorableBlock rblock = new RestorableBlock();
+                rblock.setId(inputStream.readShort());
+                rblock.setWorld(inputStream.readUTF());
+                rblock.setX(inputStream.readInt());
+                rblock.setY(inputStream.readShort());
+                rblock.setZ(inputStream.readInt());
+                int itemCount = inputStream.readShort();
+    
+                for (int i = 0; i < itemCount; i++) {
+                    // Read in us some RestorableItems
+                    int slot = inputStream.readShort();
+                    int itemId = inputStream.readShort();
+                    int amount = inputStream.readShort();
+                    short damage = inputStream.readShort();
+        
+                    // Create the stack
+                    BlockCache blockCache = BlockCache.getInstance();
+                    ItemStack itemStack = new ItemStack(blockCache.getBlockType(itemId), amount, damage);
+        
+                    // add it to the block
+                    rblock.setSlot(slot, itemStack);
+                }
+    
+                // Woo!
+                return rblock;
+            
+            case INVALID:
+            default:
+                throw new UnsupportedOperationException("Read unknown type: " + type);
         }
-
-        // TODO enum that shit yo
-        if (type == 0) { // Protection
-            RestorableProtection rprotection = new RestorableProtection();
-            rprotection.setId(inputStream.readInt());
-            rprotection.setProtectionType(inputStream.readByte());
-            rprotection.setBlockId(inputStream.readShort());
-            rprotection.setOwner(inputStream.readUTF());
-            rprotection.setWorld(inputStream.readUTF());
-            rprotection.setX(inputStream.readInt());
-            rprotection.setY(inputStream.readShort());
-            rprotection.setZ(inputStream.readInt());
-            rprotection.setCreated(inputStream.readLong());
-            rprotection.setUpdated(inputStream.readLong());
-
-            return rprotection;
-        } else if (type == 1) { // Block
-            RestorableBlock rblock = new RestorableBlock();
-            rblock.setId(inputStream.readShort());
-            rblock.setWorld(inputStream.readUTF());
-            rblock.setX(inputStream.readInt());
-            rblock.setY(inputStream.readShort());
-            rblock.setZ(inputStream.readInt());
-            int itemCount = inputStream.readShort();
-
-            for (int i = 0; i < itemCount; i++) {
-                // Read in us some RestorableItems
-                int slot = inputStream.readShort();
-                int itemId = inputStream.readShort();
-                int amount = inputStream.readShort();
-                short damage = inputStream.readShort();
-
-                // Create the stack
-                BlockCache blockCache = BlockCache.getInstance();
-                ItemStack itemStack = new ItemStack(blockCache.getBlockType(itemId), amount, damage);
-
-                // add it to the block
-                rblock.setSlot(slot, itemStack);
-            }
-
-            // Woo!
-            return rblock;
-        }
-
-        throw new UnsupportedOperationException("Read unknown type: " + type);
     }
 
     /**
      * Write an entity to the backup file
      *
-     * @param restorable
+     * @param restorable The Restorable to use
      */
     protected void writeRestorable(Restorable restorable) throws IOException {
         if (operationMode != OperationMode.WRITE) {
@@ -186,43 +165,46 @@ public class Backup {
         }
 
         // write the id
-        outputStream.write((byte) restorable.getType());
+        outputStream.write(restorable.getType());
 
-        // Write it
-        if (restorable.getType() == 0) { // Protection, also TODO ENUMSSSSSSSSSSS
-            RestorableProtection rprotection = (RestorableProtection) restorable;
-
-            outputStream.writeInt(rprotection.getId());
-            outputStream.writeByte(rprotection.getType());
-            outputStream.writeShort(rprotection.getBlockId());
-            outputStream.writeUTF(rprotection.getOwner());
-            outputStream.writeUTF(rprotection.getWorld());
-            outputStream.writeInt(rprotection.getX());
-            outputStream.writeShort(rprotection.getY());
-            outputStream.writeInt(rprotection.getZ());
-            outputStream.writeLong(rprotection.getCreated());
-            outputStream.writeLong(rprotection.getUpdated());
-        } else if (restorable.getType() == 1) { // Block, TODO DID I SAY TO DO THE ENUM YET??
-            RestorableBlock rblock = (RestorableBlock) restorable;
-
-            outputStream.writeShort(rblock.getId());
-            outputStream.writeUTF(rblock.getWorld());
-            outputStream.writeInt(rblock.getX());
-            outputStream.writeShort(rblock.getY());
-            outputStream.writeInt(rblock.getZ());
-            outputStream.writeShort(rblock.getItems().size());
-
-            // Write the items if there are any
-            for (Map.Entry<Integer, ItemStack> entry : rblock.getItems().entrySet()) {
-                int slot = entry.getKey();
-                ItemStack stack = entry.getValue();
-
-                BlockCache blockCache = BlockCache.getInstance();
-                outputStream.writeShort(slot);
-                outputStream.writeShort(blockCache.getBlockId(stack.getType()));
-                outputStream.writeShort(stack.getAmount());
-                outputStream.writeShort(stack.getDurability());
-            }
+        switch (restorable.getBackupType()) {
+            case PROTECTION:
+                RestorableProtection rprotection = (RestorableProtection) restorable;
+    
+                outputStream.writeInt(rprotection.getId());
+                outputStream.writeByte(rprotection.getType());
+                outputStream.writeShort(rprotection.getBlockId());
+                outputStream.writeUTF(rprotection.getOwner());
+                outputStream.writeUTF(rprotection.getWorld());
+                outputStream.writeInt(rprotection.getX());
+                outputStream.writeShort(rprotection.getY());
+                outputStream.writeInt(rprotection.getZ());
+                outputStream.writeLong(rprotection.getCreated());
+                outputStream.writeLong(rprotection.getUpdated());
+                break;
+            
+            case BLOCK:
+                RestorableBlock rblock = (RestorableBlock) restorable;
+    
+                outputStream.writeShort(rblock.getId());
+                outputStream.writeUTF(rblock.getWorld());
+                outputStream.writeInt(rblock.getX());
+                outputStream.writeShort(rblock.getY());
+                outputStream.writeInt(rblock.getZ());
+                outputStream.writeShort(rblock.getItems().size());
+    
+                // Write the items if there are any
+                for (Map.Entry<Integer, ItemStack> entry : rblock.getItems().entrySet()) {
+                    int slot = entry.getKey();
+                    ItemStack stack = entry.getValue();
+        
+                    BlockCache blockCache = BlockCache.getInstance();
+                    outputStream.writeShort(slot);
+                    outputStream.writeShort(blockCache.getBlockId(stack.getType()));
+                    outputStream.writeShort(stack.getAmount());
+                    outputStream.writeShort(stack.getDurability());
+                }
+                break;
         }
 
         outputStream.flush();
@@ -231,7 +213,7 @@ public class Backup {
     /**
      * Read the backup's header
      *
-     * @throws IOException
+     * @throws IOException When InputStream cannot be read
      */
     protected void readHeader() throws IOException {
         revision = inputStream.readShort();
@@ -242,7 +224,7 @@ public class Backup {
     /**
      * Write the backup's header
      *
-     * @throws IOException
+     * @throws IOException When the OutputStream cannot write
      */
     protected void writeHeader() throws IOException {
         outputStream.writeShort(revision);
@@ -254,7 +236,7 @@ public class Backup {
     /**
      * Close the backup file
      *
-     * @throws IOException
+     * @throws IOException When either InputStream or OutputStream cannot be closed
      */
     protected void close() throws IOException {
         if (operationMode == OperationMode.READ) {
@@ -262,6 +244,14 @@ public class Backup {
         } else if (operationMode == OperationMode.WRITE) {
             outputStream.close();
         }
+    }
+    
+    /**
+     * The operations the backup is allowed to perform
+     */
+    public enum OperationMode {
+        READ,
+        WRITE
     }
 
 }

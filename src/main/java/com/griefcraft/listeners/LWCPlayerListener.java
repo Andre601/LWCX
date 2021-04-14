@@ -75,9 +75,6 @@ import java.util.Set;
 
 public class LWCPlayerListener implements Listener {
 
-    /**
-     * The plugin instance
-     */
     private static LWCPlugin plugin;
 
     public LWCPlayerListener(LWCPlugin plugin) {
@@ -461,12 +458,7 @@ public class LWCPlayerListener implements Listener {
             event.setCancelled(true);
         }
     }
-
-    /**
-     * Handle the item move event
-     *
-     * @param inventory
-     */
+    
     private boolean handleMoveItemEvent(InventoryMoveItemEvent event, Inventory initiator, Inventory inventory) {
         LWC lwc = LWC.getInstance();
 
@@ -538,11 +530,7 @@ public class LWCPlayerListener implements Listener {
         boolean protectHopperOut = inventory == event.getSource() && protection.hasFlag(Flag.Type.HOPPEROUT);
 
         // xor = (a && !b) || (!a && b)
-        if (denyHoppers ^ (protectHopper || protectHopperIn || protectHopperOut)) {
-            return true;
-        }
-
-        return false;
+        return denyHoppers ^ (protectHopper || protectHopperIn || protectHopperOut);
     }
 
     @EventHandler(priority = EventPriority.HIGH)
@@ -618,7 +606,7 @@ public class LWCPlayerListener implements Listener {
                 int actionCount = actions.size();
                 boolean hasInteracted = actions.contains("interacted");
                 boolean hasPendingAction = (hasInteracted && actionCount > 1) || (!hasInteracted && actionCount > 0);
-
+                
                 // If the event was cancelled and they have an action, warn them
                 if (event.isCancelled()) {
                     // only send it if a non-"interacted" action is set which is always set on the player
@@ -717,10 +705,7 @@ public class LWCPlayerListener implements Listener {
         // Player interacting with the inventory
         Player player = (Player) event.getWhoClicked();
 
-        // The inventory they are using
-        Inventory inventory = event.getInventory();
-
-        if (inventory == null || event.getSlot() < 0) {
+        if (event.getSlot() < 0) {
             return;
         }
 
@@ -782,7 +767,7 @@ public class LWCPlayerListener implements Listener {
                 return;
             }
 
-            if (item == null || item.getType() == null || item.getType() == Material.AIR) {
+            if (item == null || item.getType() == Material.AIR) {
                 return;
             }
 
@@ -790,7 +775,7 @@ public class LWCPlayerListener implements Listener {
             // click (no shift)
             // this is for when players are INSERTing items (i.e. item in hand
             // and left clicking)
-            if (player.getInventory().getItemInMainHand() == null && (!event.isRightClick() && !event.isShiftClick())) {
+            if (!event.isRightClick() && !event.isShiftClick()) {
                 return;
             }
         }

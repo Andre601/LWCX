@@ -36,74 +36,6 @@ import org.json.simple.JSONObject;
 public class Permission {
 
     /**
-     * The access level
-     * The ordering of this enum <b>MUST NOT</b> change as ordinal values are used internally.
-     */
-    public enum Access {
-
-        /**
-         * The player has no access
-         */
-        NONE,
-
-        /**
-         * The player has rights that of a regular player
-         */
-        PLAYER,
-
-        /**
-         * The player has admin rights
-         */
-        ADMIN;
-
-        @Override
-        public String toString() {
-            return StringUtil.capitalizeFirstLetter(super.toString());
-        }
-    }
-
-    /**
-     * The type this permission applies to.
-     * The ordering of this enum <b>MUST NOT</b> change as ordinal values are used internally.
-     */
-    public enum Type {
-        /**
-         * Applies to a specific group of players
-         */
-        GROUP,
-
-        /**
-         * Applies to a specific player
-         */
-        PLAYER,
-
-        /**
-         * Unused / reserved, has been used before
-         */
-        RESERVED,
-
-        /**
-         * Applies to citizens of a Towny town
-         */
-        TOWN,
-
-        /**
-         * Allows a specific item (such as a key) to open the protection when interacted with in hand
-         */
-        ITEM,
-
-        /**
-         * Applies to members of a WorldGuard region
-         */
-        REGION;
-
-        @Override
-        public String toString() {
-            return StringUtil.capitalizeFirstLetter(super.toString());
-        }
-    }
-
-    /**
      * The entity this applies to
      */
     private String name;
@@ -143,7 +75,7 @@ public class Permission {
     /**
      * Encode the Permission object to a JSONObject
      *
-     * @return
+     * @return JSONObject containing name, type and rights of the Permission
      */
     @SuppressWarnings("unchecked")
     public JSONObject encodeToJSON() {
@@ -159,8 +91,8 @@ public class Permission {
     /**
      * Decode a JSONObject into a Permission object
      *
-     * @param node
-     * @return
+     * @param node The JSONObject to decode
+     * @return Permission instance from the provided JSONObject
      */
     public static Permission decodeJSON(JSONObject node) {
         Permission permission = new Permission();
@@ -236,6 +168,74 @@ public class Permission {
 
     public boolean isVolatile() {
         return isVolatile;
+    }
+    
+    /**
+     * The access level
+     * The ordering of this enum <b>MUST NOT</b> change as ordinal values are used internally.
+     */
+    public enum Access {
+        
+        /**
+         * The player has no access
+         */
+        NONE,
+        
+        /**
+         * The player has rights that of a regular player
+         */
+        PLAYER,
+        
+        /**
+         * The player has admin rights
+         */
+        ADMIN;
+        
+        @Override
+        public String toString() {
+            return StringUtil.capitalizeFirstLetter(super.toString());
+        }
+    }
+    
+    /**
+     * The type this permission applies to.
+     * The ordering of this enum <b>MUST NOT</b> change as ordinal values are used internally.
+     */
+    public enum Type {
+        /**
+         * Applies to a specific group of players
+         */
+        GROUP,
+        
+        /**
+         * Applies to a specific player
+         */
+        PLAYER,
+        
+        /**
+         * Unused / reserved, has been used before
+         */
+        RESERVED,
+        
+        /**
+         * Applies to citizens of a Towny town
+         */
+        TOWN,
+        
+        /**
+         * Allows a specific item (such as a key) to open the protection when interacted with in hand
+         */
+        ITEM,
+        
+        /**
+         * Applies to members of a WorldGuard region
+         */
+        REGION;
+        
+        @Override
+        public String toString() {
+            return StringUtil.capitalizeFirstLetter(super.toString());
+        }
     }
 
 }

@@ -39,26 +39,14 @@ import java.util.ResourceBundle;
 
 public class SimpleMessageParser implements MessageParser {
 
-    /**
-     * The i18n localization bundle
-     */
     private final ResourceBundle locale;
 
-    /**
-     * Cached messages
-     */
     private final Map<String, String> basicMessageCache = new HashMap<>();
 
-    /**
-     * Loads the size of the bindMessageCache from the core config
-     */
-    private Configuration configuration = Configuration.load("core.yml");
+    private final Configuration configuration = Configuration.load("core.yml");
 
     public final int bindMessageCacheSize = configuration.getInt("core.bindMessageCacheSize", 1000);
 
-    /**
-     * A heavy cache that includes binds.
-     */
     private final LRUCache<String, String> bindMessageCache = new LRUCache<>(bindMessageCacheSize);
 
     /**
@@ -142,8 +130,8 @@ public class SimpleMessageParser implements MessageParser {
     /**
      * Convert an even-lengthed argument array to a map containing String keys i.e parseBinds("Test", null, "Test2", obj) = Map().put("test", null).put("test2", obj)
      *
-     * @param args
-     * @return
+     * @param args The argument-replacement pair to parse
+     * @return Map containing the String and Object pairs
      */
     private Map<String, Object> parseBinds(Object... args) {
         Map<String, Object> bind = new HashMap<>();

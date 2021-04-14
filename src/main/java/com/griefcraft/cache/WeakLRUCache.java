@@ -28,6 +28,7 @@
 
 package com.griefcraft.cache;
 
+import javax.annotation.Nonnull;
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.WeakReference;
 import java.util.Collection;
@@ -112,7 +113,7 @@ public class WeakLRUCache<K, V> implements Map<K, V> {
     /**
      * Gets the size of the cache currently
      *
-     * @return
+     * @return int representing the current cache size
      */
     public int size() {
         processQueue();
@@ -167,7 +168,7 @@ public class WeakLRUCache<K, V> implements Map<K, V> {
         writes++;
         processQueue();
 
-        WeakValue<V, K> oldRef = weakCache.put(key, new WeakValue<V, K>(value, key, queue));
+        WeakValue<V, K> oldRef = weakCache.put(key, new WeakValue<>(value, key, queue));
         return oldRef != null ? oldRef.get() : null;
     }
 
@@ -176,7 +177,7 @@ public class WeakLRUCache<K, V> implements Map<K, V> {
         return old != null ? old.get() : null;
     }
 
-    public void putAll(Map<? extends K, ? extends V> m) {
+    public void putAll(@Nonnull Map<? extends K, ? extends V> m) {
         throw new UnsupportedOperationException("putAll() is not supported by WeakLRUCache");
     }
 
@@ -196,7 +197,7 @@ public class WeakLRUCache<K, V> implements Map<K, V> {
      * @param <K>
      */
     @SuppressWarnings("hiding")
-    private final class WeakValue<V, K> extends WeakReference<V> {
+    private static final class WeakValue<V, K> extends WeakReference<V> {
 
         /**
          * The key for the value

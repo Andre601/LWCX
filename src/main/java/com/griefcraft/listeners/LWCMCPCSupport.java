@@ -11,19 +11,9 @@ import java.util.Set;
 
 public class LWCMCPCSupport extends JavaModule {
 
-    /**
-     * The shared multiplayer block id used by transport pipes
-     */
+    
+    private final LWC lwc;
 
-    /**
-     * The LWC object
-     */
-    private LWC lwc;
-
-    /**
-     * A set of blacklisted players that are blocked from destroying any blocks protected by LWC. Mainly useful for MCPC
-     * where mods can remove blocks and try to break the block by sending an event first (e.g turtle)
-     */
     private final Set<String> blacklistedPlayers = new HashSet<>();
 
     public LWCMCPCSupport(LWC lwc) {
@@ -45,7 +35,7 @@ public class LWCMCPCSupport extends JavaModule {
     /**
      * Called when a protection is destroyed
      *
-     * @param event
+     * @param event The Event instance
      */
     public void onDestroyProtection(LWCProtectionDestroyEvent event) {
         if (event.isCancelled()) {

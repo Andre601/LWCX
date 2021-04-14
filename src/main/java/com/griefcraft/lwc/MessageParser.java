@@ -37,11 +37,11 @@ public interface MessageParser {
      * Retrieve and parse a localized key using the arguments. The arguments are parsed in the format of
      * "key1" value1 "key2" value2 ...
      *
-     * @param key
-     * @param args
-     * @return
+     * @param key The message key to use
+     * @param args Arguments to parse in the text in format {@code "argument1", replacement1, "argument2", replacement2, ...}
+     * @return The parsed String
      */
-    public String parseMessage(String key, Object... args);
+    String parseMessage(String key, Object... args);
 
 
 }

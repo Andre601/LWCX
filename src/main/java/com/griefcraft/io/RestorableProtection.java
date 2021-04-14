@@ -36,66 +36,38 @@ import java.text.SimpleDateFormat;
 
 public class RestorableProtection implements Restorable {
 
-    /**
-     * The id in the database
-     */
     private int id;
 
-    /**
-     * The protection type
-     */
     private int protectionType;
 
-    /**
-     * The block id
-     */
     private int blockId;
 
-    /**
-     * The protection owner
-     */
     private String owner;
 
-    /**
-     * The world the protection is int
-     */
     private String world;
 
-    /**
-     * The x coordinate
-     */
     private int x;
 
-    /**
-     * The y coordinate
-     */
     private int y;
 
-    /**
-     * The z coordinate
-     */
     private int z;
 
-    /**
-     * Data for the protection (acls, flags)
-     */
     private String data;
 
-    /**
-     * Epoch when it was created
-     */
     private long created;
 
-    /**
-     * Epoch when it was last updated
-     */
     private long updated;
 
+    @Override
     public int getType() {
-        return 0; // TODO ENUM ENUM ENUM ENUM ENUM ENUM
+        return getBackupType().getType();
+    }
+    
+    @Override
+    public BackupType getBackupType() {
+        return BackupType.PROTECTION;
     }
 
-    @SuppressWarnings("unused")
     public void restore() {
         LWC lwc = LWC.getInstance();
         Protection protection = lwc.getPhysicalDatabase().registerProtection(blockId, Protection.Type.values()[protectionType],
@@ -104,10 +76,11 @@ public class RestorableProtection implements Restorable {
     }
 
     /**
-     * Wrap a protection object around a RestorableProtection object
+     * Wrap a protection object around a RestorableProtection object<br>
+     * This may return null if the provided Protection instance is null or the protection couldn't be parsed
      *
-     * @param protection
-     * @return
+     * @param protection The Protection instance to create a RestorableProtection from
+     * @return The RestorableProtection instance or null
      */
     public static RestorableProtection wrapProtection(Protection protection) {
         if (protection == null) {
@@ -130,7 +103,7 @@ public class RestorableProtection implements Restorable {
 
             return rprotection;
         } catch (ParseException e) {
-            System.out.println("Failed to wrap protection: " + protection + " " + e.getMessage());
+            LWC.getInstance().getPlugin().getLogger().warning("Failed to wrap Protection: " + protection + " " + e.getMessage());
             return null;
         }
     }

@@ -37,7 +37,7 @@ import org.bukkit.plugin.Plugin;
 
 public class LWCServerListener implements Listener {
 
-    private LWCPlugin plugin;
+    private final LWCPlugin plugin;
 
     public LWCServerListener(LWCPlugin plugin) {
         this.plugin = plugin;

@@ -33,83 +33,8 @@ import org.json.simple.JSONObject;
 
 public class Flag {
 
-    /**
-     * The ordering of this enum <b>MUST NOT</b> change. The ordinal value is stored internally.
-     * However, the name of a flag may freely change at any time.
-     */
-    public enum Type {
+    private final Type type;
 
-        /**
-         * Redstone use will be disabled on the protection if protections.denyRedstone = false;
-         * however if denyRedstone = true, this flag will instead enable redstone on the protection!
-         */
-        REDSTONE,
-
-        /**
-         * Attracts dropped items within a certain radius into the protection's inventory
-         */
-        MAGNET,
-
-        /**
-         * Protection is exempt from being auto removed from LWC - e.g /lwc admin expire -remove 2 weeks
-         */
-        EXEMPTION(true),
-
-        /**
-         * The door will automatically close after the time configured in plugins/LWC/doors.yml
-         */
-        AUTOCLOSE,
-
-        /**
-         * Allows explosions to blow a protection up
-         */
-        ALLOWEXPLOSIONS,
-
-        /**
-         * Controls whether or not hoppers can be used on a protection
-         */
-        HOPPER,
-
-        /**
-         * Controls whether or not hoppers can be used on a protection to place items in
-         */
-        HOPPERIN,
-
-        /**
-         * Controls whether or not hoppers can be used on a protection to take items out
-         */
-        HOPPEROUT;
-
-        Type() {
-            this(false);
-        }
-
-        Type(boolean restricted) {
-            this.restricted = restricted;
-        }
-
-        /**
-         * If the flag is restricted to only LWC admins
-         */
-        private boolean restricted;
-
-        /**
-         * @return true if the flag should only be usable by LWC admins
-         */
-        public boolean isRestricted() {
-            return restricted;
-        }
-
-    }
-
-    /**
-     * The flag type
-     */
-    private Type type;
-
-    /**
-     * Flag data
-     */
     private final JSONObject data = new JSONObject();
 
     @SuppressWarnings("unchecked")
@@ -119,10 +44,17 @@ public class Flag {
     }
 
     /**
-     * Decode JSON data for a flag
+     * Decode JSON data for a flag<br>
+     * This may return null in the following cases:
+     * <ul>
+     *     <li>The provided JSONObject is null</li>
+     *     <li>The "id" of the JSONObject cannot be parsed to an integer</li>
+     *     <li>The "id" of the JSONObject returned -1</li>
+     *     <li>The "id" of the JSONObject is larger than the available Types</li>
+     * </ul>
      *
-     * @param node
-     * @return
+     * @param node The JSONObject to decode
+     * @return The Flag from the JSONObject, or null
      */
     @SuppressWarnings("unchecked")
     public static Flag decodeJSON(JSONObject node) {
@@ -131,7 +63,7 @@ public class Flag {
         }
 
         // decode the type
-        int ordinal = -1;
+        int ordinal;
 
         try {
             ordinal = Integer.parseInt(node.get("id").toString());
@@ -167,17 +99,83 @@ public class Flag {
     }
 
     /**
-     * @return
+     * @return The Type
      */
     public Type getType() {
         return type;
     }
 
     /**
-     * @return
+     * @return The JSONObject with the data
      */
     public JSONObject getData() {
         return data;
+    }
+    
+    /**
+     * The ordering of this enum <b>MUST NOT</b> change. The ordinal value is stored internally.
+     * However, the name of a flag may freely change at any time.
+     */
+    public enum Type {
+        
+        /**
+         * Redstone use will be disabled on the protection if protections.denyRedstone = false;
+         * however if denyRedstone = true, this flag will instead enable redstone on the protection!
+         */
+        REDSTONE,
+        
+        /**
+         * Attracts dropped items within a certain radius into the protection's inventory
+         */
+        MAGNET,
+        
+        /**
+         * Protection is exempt from being auto removed from LWC - e.g /lwc admin expire -remove 2 weeks
+         */
+        EXEMPTION(true),
+        
+        /**
+         * The door will automatically close after the time configured in plugins/LWC/doors.yml
+         */
+        AUTOCLOSE,
+        
+        /**
+         * Allows explosions to blow a protection up
+         */
+        ALLOWEXPLOSIONS,
+        
+        /**
+         * Controls whether or not hoppers can be used on a protection
+         */
+        HOPPER,
+        
+        /**
+         * Controls whether or not hoppers can be used on a protection to place items in
+         */
+        HOPPERIN,
+        
+        /**
+         * Controls whether or not hoppers can be used on a protection to take items out
+         */
+        HOPPEROUT;
+        
+        Type() {
+            this(false);
+        }
+        
+        Type(boolean restricted) {
+            this.restricted = restricted;
+        }
+        
+        private final boolean restricted;
+        
+        /**
+         * @return true if the flag should only be usable by LWC admins
+         */
+        public boolean isRestricted() {
+            return restricted;
+        }
+        
     }
 
 }

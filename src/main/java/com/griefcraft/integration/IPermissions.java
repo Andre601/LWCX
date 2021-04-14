@@ -37,9 +37,9 @@ public interface IPermissions {
     /**
      * Get the groups a player belongs to
      *
-     * @param player
-     * @return
+     * @param player The Player to get the Groups from
+     * @return List containing names of all groups the player is part of
      */
-    public List<String> getGroups(Player player);
+    List<String> getGroups(Player player);
 
 }

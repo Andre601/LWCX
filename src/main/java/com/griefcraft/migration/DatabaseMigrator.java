@@ -37,7 +37,7 @@ import java.util.List;
 import java.util.logging.Logger;
 
 public class DatabaseMigrator {
-    private static Logger logger = Logger.getLogger("LWCMigrator");
+    private final static Logger logger = Logger.getLogger("LWCMigrator");
 
     /**
      * Converts the current database to the given database type

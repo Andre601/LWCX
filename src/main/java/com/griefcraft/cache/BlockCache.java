@@ -9,7 +9,9 @@ import org.bukkit.block.Block;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -17,48 +19,15 @@ import java.util.Map;
  */
 public class BlockCache {
 
-    /**
-     * The BlockCache singleton.
-     */
     private static BlockCache blockCache = new BlockCache();
 
-    /**
-     * The LWC instance.
-     */
-    private LWC lwc;
+    private final LWC lwc;
 
-    /**
-     * Storing block mappings internally using two HashMaps, to allow bidirectional lookups.
-     */
-    private Map<Integer, Material> intBlockCache;
-    private Map<Material, Integer> materialBlockCache;
+    private final Map<Integer, Material> intBlockCache;
+    private final Map<Material, Integer> materialBlockCache;
 
-    /**
-     * The lowest available block ID for new additions.
-     */
     private int nextId = 1;
 
-    /**
-     * Values that LWC will expect to be constant across databases.
-     */
-    public static enum Constants {
-        AIR(0),
-        ENTITY(1);
-
-        private int id;
-
-        Constants(int id) {
-            this.id = id;
-        }
-
-        public int getValue() {
-            return id;
-        }
-    }
-
-    /**
-     * Initialization for the block cache.
-     */
     private BlockCache() {
         lwc = LWC.getInstance();
         intBlockCache = new HashMap<>();
@@ -68,7 +37,7 @@ public class BlockCache {
     /**
      * Gets the block cache.
      *
-     * @return
+     * @return The instance of this BlockCache
      */
     public static BlockCache getInstance() {
         return blockCache;
@@ -84,10 +53,10 @@ public class BlockCache {
     /**
      * Add a mapping to both maps. Only to be used internally.
      *
-     * @param integer
-     * @param material
+     * @param integer The integer to keep track of
+     * @param material The Material to keep track of
      */
-    private void addMapping(Integer integer, Material material) {
+    private void addMapping(int integer, Material material) {
         intBlockCache.put(integer, material);
         materialBlockCache.put(material, integer);
     }
@@ -95,10 +64,10 @@ public class BlockCache {
     /**
      * Remove a mapping from both maps. Only to be used internally.
      *
-     * @param integer
-     * @param material
+     * @param integer The integer to remove
+     * @param material The Material to remove
      */
-    private void removeMapping(Integer integer, Material material) {
+    private void removeMapping(int integer, Material material) {
         intBlockCache.remove(integer);
         materialBlockCache.remove(material);
     }
@@ -113,7 +82,7 @@ public class BlockCache {
             PreparedStatement blocksStatement = database.prepare("SELECT id, name FROM " + prefix + "blocks");
             ResultSet blocksSet = blocksStatement.executeQuery();
             while (blocksSet.next()) {
-                Integer materialId = blocksSet.getInt("id");
+                int materialId = blocksSet.getInt("id");
                 String materialName = blocksSet.getString("name");
                 Material material = Material.matchMaterial(materialName);
                 if (material != null) {
@@ -138,7 +107,8 @@ public class BlockCache {
     /**
      * Adds a block the block cache by its Material type, and tries to add it if it doesn't exist.
      *
-     * @param blockMaterial
+     * @param blockMaterial The material to add
+     * @return int representing the new ID or -1 if not successful.
      */
     public int addBlock(Material blockMaterial) {
         if (materialBlockCache.containsKey(blockMaterial)) {
@@ -166,7 +136,8 @@ public class BlockCache {
     /**
      * Adds a block to the block cache by its Block name, and tries to add it if it doesn't exist.
      *
-     * @param block
+     * @param block The block to add
+     * @return int representing the new ID or -1 if not successful.
      */
     public int addBlock(String block) {
         Material material = Material.matchMaterial(block);
@@ -179,7 +150,8 @@ public class BlockCache {
     /**
      * Adds a block to the block cache by its Block type, and tries to add it if it doesn't exist.
      *
-     * @param block
+     * @param block the block to add
+     * @return int representing the new ID or -1 if not successful.
      */
     public int addBlock(Block block) {
         return addBlock(block.getType());
@@ -188,7 +160,8 @@ public class BlockCache {
     /**
      * Adds a block to the block cache by its pre-1.13 ID, and tries to add it if it doesn't exist.
      *
-     * @param blockId
+     * @param blockId The block to add by its ID.
+     * @return int representing the new ID or -1 if not successful.
      */
     public int addBlock(int blockId) {
         return addBlock(MaterialUtil.getMaterialById(blockId));
@@ -197,7 +170,7 @@ public class BlockCache {
     /**
      * Removes a block the block cache by its Material type, if it exists.
      *
-     * @param blockMaterial
+     * @param blockMaterial The Block to remove by its Material type
      */
     public void removeBlock(Material blockMaterial) {
         if (materialBlockCache.containsKey(blockMaterial)) {
@@ -215,7 +188,7 @@ public class BlockCache {
     /**
      * Removes a block to the block cache by its Block type, if it exists.
      *
-     * @param block
+     * @param block The block to remove
      */
     public void removeBlock(Block block) {
         removeBlock(block.getType());
@@ -224,7 +197,7 @@ public class BlockCache {
     /**
      * Removes a block by its ID in the database, if it exists.
      *
-     * @param blockId
+     * @param blockId The block to remove by its ID
      */
     public void removeBlock(int blockId) {
         if (!intBlockCache.containsKey(blockId)) {
@@ -246,8 +219,8 @@ public class BlockCache {
     /**
      * Get a block's id, or try to add it if it doesn't exist.
      *
-     * @param blockMaterial
-     * @return
+     * @param blockMaterial The block ID to get by its Material type
+     * @return int representing the ID or -1 if not successful.
      */
     public int getBlockId(Material blockMaterial) {
         Integer id = materialBlockCache.get(blockMaterial);
@@ -260,8 +233,8 @@ public class BlockCache {
     /**
      * Get a block's id, or try to add it if it doesn't exist.
      *
-     * @param blockName
-     * @return
+     * @param blockName The block ID to get by its name
+     * @return int representing the ID or -1 if not successful.
      */
     public int getBlockId(String blockName) {
         Material material = Material.matchMaterial(blockName);
@@ -274,8 +247,8 @@ public class BlockCache {
     /**
      * Get a block's id, or try to add it if it doesn't exist.
      *
-     * @param block
-     * @return
+     * @param block The block ID to get by the Block type
+     * @return int representing the ID or -1 if not successful.
      */
     public int getBlockId(Block block) {
         return getBlockId(block.getType());
@@ -284,8 +257,8 @@ public class BlockCache {
     /**
      * Get a block's id, or try to add it if it doesn't exist.
      *
-     * @param blockId
-     * @return
+     * @param blockId The block ID to get by the pre-1.13 block id
+     * @return int representing the ID or -1 if not successful.
      */
     public int getBlockId(int blockId) {
         if (intBlockCache.containsKey(blockId)) {
@@ -297,8 +270,8 @@ public class BlockCache {
     /**
      * Get a block's type, or try to add it if it doesn't exist.
      *
-     * @param blockMaterial
-     * @return
+     * @param blockMaterial The Material to get by the Material type
+     * @return Material of the block or null if not successful.
      */
     public Material getBlockType(Material blockMaterial) {
         if (materialBlockCache.containsKey(blockMaterial)) {
@@ -314,8 +287,8 @@ public class BlockCache {
     /**
      * Get a block's type, or try to add it if it doesn't exist.
      *
-     * @param blockName
-     * @return
+     * @param blockName The Material to get by the block name
+     * @return Material of the block or null if not successful.
      */
     public Material getBlockType(String blockName) {
         Material material = Material.matchMaterial(blockName);
@@ -328,8 +301,8 @@ public class BlockCache {
     /**
      * Get a block's type, or try to add it if it doesn't exist.
      *
-     * @param block
-     * @return
+     * @param block The Material to get by the Block type
+     * @return Material of the block or null if not successful.
      */
     public Material getBlockType(Block block) {
         return getBlockType(block.getType());
@@ -338,8 +311,8 @@ public class BlockCache {
     /**
      * Get a block's type, or try to add it if it doesn't exist.
      *
-     * @param blockId
-     * @return
+     * @param blockId The Material to get by the block ID
+     * @return Material of the block or null if not successful.
      */
     public Material getBlockType(int blockId) {
         if (intBlockCache.containsKey(blockId)) {
@@ -353,6 +326,24 @@ public class BlockCache {
             }
         }
         return null;
+    }
+    
+    /**
+     * Values that LWC will expect to be constant across databases.
+     */
+    public enum Constants {
+        AIR(0),
+        ENTITY(1);
+        
+        private final int id;
+        
+        Constants(int id) {
+            this.id = id;
+        }
+        
+        public int getValue() {
+            return id;
+        }
     }
 
 }

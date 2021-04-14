@@ -32,25 +32,16 @@ import java.util.LinkedHashMap;
 
 public class LRUCache<K, V> extends LinkedHashMap<K, V> {
 
-    /**
-     *
-     */
     private static final long serialVersionUID = 1L;
 
+    private long reads = 0;
+
+    private long writes = 0;
+    
     /**
      * The max number of entries allowed
      */
     protected int maxCapacity;
-
-    /**
-     * Amount of reads performed on the cache
-     */
-    private long reads = 0;
-
-    /**
-     * Amount of writes performed on the cache
-     */
-    private long writes = 0;
 
     public LRUCache(int maxCapacity) {
         super(maxCapacity, 0.75f, true);

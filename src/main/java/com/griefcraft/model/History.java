@@ -36,110 +36,32 @@ import java.util.List;
 
 public class History {
 
-    /**
-     * <p>The history type defines what this History object is for, such as TRANSACTION.</p>
-     * 
-     * Ordering <b>must</b> remain constant as internally, the ordinal is used and
-     * if ordering is changed, LWC will experience undefined behaviour.
-     */
-    public enum Type {
-
-        /**
-         * Designates that this history object is for a transaction - e.g when a protection is removed
-         */
-        TRANSACTION
-
-    }
-
-    /**
-     * <p>The status of this History object; most often ACTIVE or INACTIVE.</p>
-     * 
-     * As with {@link Type}, the ordering <b>must</b> remain constant and not change.
-     */
-    public enum Status {
-
-        /**
-         * This type is still active
-         */
-        ACTIVE,
-
-        /**
-         * For some reason the type is now inactive. Most likely the
-         * protection was removed by the player
-         */
-        INACTIVE
-    }
-
-    /**
-     * History id in the database
-     */
     private int id;
 
-    /**
-     * Affected protection id
-     */
     private int protectionId;
-
-    /**
-     * The protection known for this history object
-     */
+    
     private Protection protection;
 
-    /**
-     * The player that caused the history action to be created
-     */
     private String player;
 
-    /**
-     * The x coordinate of the history item
-     */
     private int x;
 
-    /**
-     * The y coordinate of the history item
-     */
     private int y;
 
-    /**
-     * The z coordinate of the history item
-     */
     private int z;
 
-    /**
-     * The history type, e.g TRANSACTION
-     */
     private Type type = Type.TRANSACTION;
 
-    /**
-     * The status (ACTIVE or INACTIVE normally)
-     */
-    private Status status = Status.INACTIVE;
+    private Status status;
 
-    /**
-     * Metadata about the transaction. An example of one entry would be
-     * for iConomy prices to be pushed in here. Any module can modify the
-     * meta data and add their own data about the transaction.
-     */
     private String[] metadata;
 
-    /**
-     * The seconds (since linux epoch) this History object was created
-     */
     private long timestamp;
 
-    /**
-     * If the history val exists in the database
-     */
     private boolean exists = false;
 
-    /**
-     * If the history object was modified
-     */
     private boolean modified = false;
 
-    /**
-     * If the History object is waiting to be flushed to the database
-     */
     private boolean saving = false;
 
     public History() {
@@ -170,7 +92,7 @@ public class History {
     /**
      * Add a string of data to the stored metadata
      *
-     * @param data
+     * @param data The String to add to the metadata
      */
     public void addMetaData(String data) {
         String[] temp = new String[metadata.length + 1];
@@ -188,8 +110,8 @@ public class History {
     /**
      * Check if the metadata contains a given key
      *
-     * @param key
-     * @return
+     * @param key The key to check
+     * @return True if the metadata has the key
      */
     public boolean hasKey(String key) {
         return getMetaDataStartsWith(key + "=") != null;
@@ -198,8 +120,8 @@ public class History {
     /**
      * Get a boolean value from the metadata using the key (key=value)
      *
-     * @param key
-     * @return
+     * @param key The key to use to get the metadata
+     * @return Boolean of the provided metadata key
      */
     public boolean getBoolean(String key) {
         String metadata = getMetaDataStartsWith(key + "=");
@@ -211,8 +133,8 @@ public class History {
     /**
      * Get a String value from the metadata using the key (key=value)
      *
-     * @param key
-     * @return
+     * @param key The key to use to get the metadata
+     * @return String of the provided metadata key
      */
     public String getString(String key) {
         String metadata = getMetaDataStartsWith(key + "=");
@@ -227,8 +149,8 @@ public class History {
     /**
      * Get an integer value from the metadata using the key (key=value)
      *
-     * @param key
-     * @return
+     * @param key The key to use to get the metadata
+     * @return Integer of the provided metadata key
      */
     public int getInteger(String key) {
         String metadata = getMetaDataStartsWith(key + "=");
@@ -243,8 +165,8 @@ public class History {
     /**
      * Get a double value from the metadata using the key (key=value)
      *
-     * @param key
-     * @return
+     * @param key The key to use to get the metadata
+     * @return Double of the provided metadata key
      */
     public double getDouble(String key) {
         String metadata = getMetaDataStartsWith(key + "=");
@@ -259,7 +181,7 @@ public class History {
     /**
      * Get a metadata that starts with a specific string
      *
-     * @param startsWith
+     * @param startsWith The String to check for
      * @return the full metadata if a match is found, otherwise NULL
      */
     public String getMetaDataStartsWith(String startsWith) {
@@ -275,7 +197,7 @@ public class History {
     /**
      * Remove a string of known data from the stored metadata
      *
-     * @param data
+     * @param data The metadata to remove
      * @return true if the given metadata was successfully removed
      */
     public boolean removeMetaData(String data) {
@@ -295,7 +217,7 @@ public class History {
     /**
      * Set the cached protection this History object belongs to save a query or two later on
      *
-     * @param protection
+     * @param protection The protection to set
      */
     public void setProtection(Protection protection) {
         if (protection == null) {
@@ -316,7 +238,7 @@ public class History {
     /**
      * Set if the History object exists in the database
      *
-     * @param exists
+     * @param exists The boolean to set if it should exist
      */
     public void setExists(boolean exists) {
         this.exists = exists;
@@ -472,6 +394,40 @@ public class History {
     public void setTimestamp(long timestamp) {
         this.timestamp = timestamp;
         this.modified = true;
+    }
+    
+    /**
+     * <p>The history type defines what this History object is for, such as TRANSACTION.</p>
+     *
+     * Ordering <b>must</b> remain constant as internally, the ordinal is used and
+     * if ordering is changed, LWC will experience undefined behaviour.
+     */
+    public enum Type {
+        
+        /**
+         * Designates that this history object is for a transaction - e.g when a protection is removed
+         */
+        TRANSACTION
+        
+    }
+    
+    /**
+     * <p>The status of this History object; most often ACTIVE or INACTIVE.</p>
+     *
+     * As with {@link Type}, the ordering <b>must</b> remain constant and not change.
+     */
+    public enum Status {
+        
+        /**
+         * This type is still active
+         */
+        ACTIVE,
+        
+        /**
+         * For some reason the type is now inactive. Most likely the
+         * protection was removed by the player
+         */
+        INACTIVE
     }
 
 }

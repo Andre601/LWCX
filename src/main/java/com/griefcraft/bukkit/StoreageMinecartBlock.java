@@ -4,7 +4,7 @@ import org.bukkit.block.BlockState;
 import org.bukkit.entity.minecart.StorageMinecart;
 
 public class StoreageMinecartBlock extends EntityBlock {
-    private StorageMinecart minecart;
+    private final StorageMinecart minecart;
 
     public StoreageMinecartBlock(StorageMinecart minecart) {
         super(minecart);

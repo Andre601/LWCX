@@ -4,7 +4,7 @@ import org.bukkit.block.BlockState;
 import org.bukkit.entity.minecart.HopperMinecart;
 
 public class HopperMinecartBlock extends EntityBlock {
-    private HopperMinecart minecart;
+    private final HopperMinecart minecart;
 
     public HopperMinecartBlock(HopperMinecart minecart) {
         super(minecart);

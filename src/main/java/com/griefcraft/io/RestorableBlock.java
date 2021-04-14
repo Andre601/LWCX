@@ -44,40 +44,28 @@ import java.util.Map;
 
 public class RestorableBlock implements Restorable {
 
-    /**
-     * The block id
-     */
     private int id;
 
-    /**
-     * The world's name
-     */
     private String world;
 
-    /**
-     * The x coordinate
-     */
     private int x;
 
-    /**
-     * The y coordinate
-     */
     private int y;
 
-    /**
-     * The z coordinate
-     */
     private int z;
 
-    /**
-     * The items in this block's inventory if it has one
-     */
     private final Map<Integer, ItemStack> items = new HashMap<>();
 
+    @Override
     public int getType() {
-        return 1; // TODO ENUM, HOPEFULLY I'LL REMEMBER IF I PUT THIS TODO EVERYWHERE
+        return getBackupType().getType();
     }
-
+    
+    @Override
+    public BackupType getBackupType(){
+        return BackupType.BLOCK;
+    }
+    
     public void restore() {
         LWC lwc = LWC.getInstance();
 
@@ -89,7 +77,7 @@ public class RestorableBlock implements Restorable {
                 World bworld = server.getWorld(world);
 
                 // Not found :-(
-                if (world == null) {
+                if (bworld == null) {
                     return;
                 }
 
@@ -102,7 +90,7 @@ public class RestorableBlock implements Restorable {
 
                 if (items.size() > 0) {
                     if (!(block.getState() instanceof InventoryHolder)) {
-                        lwc.log(String.format("The block at [%d, %d, %d] has backed up items but no longer supports them. Why? %s", x, y, z, block.toString()));
+                        lwc.log(String.format("The block at [%d, %d, %d] has backed up items but no longer supports them. Why? %s", x, y, z, block));
                     }
 
                     // Get the block's inventory
@@ -126,10 +114,11 @@ public class RestorableBlock implements Restorable {
     }
 
     /**
-     * Wrap a block in a restorableblock object
+     * Wrap a block in a restorableblock object<br>
+     * This may return null if the provided block is null
      *
-     * @param block
-     * @return
+     * @param block The block to turn into a RestorableBlock
+     * @return The RestorableBlock instance or null
      */
     public static RestorableBlock wrapBlock(Block block) {
         if (block == null) {
@@ -168,8 +157,8 @@ public class RestorableBlock implements Restorable {
     /**
      * Set a slot in the inventory
      *
-     * @param slot
-     * @param stack
+     * @param slot The slot to set the ItemStack into
+     * @param stack The ItemStack to set
      */
     public void setSlot(int slot, ItemStack stack) {
         items.put(slot, stack);

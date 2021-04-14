@@ -32,19 +32,10 @@ import org.bukkit.entity.Player;
 
 public class Mode {
 
-    /**
-     * The name of this mode
-     */
     private String name;
 
-    /**
-     * The player this mode belongs to
-     */
     private Player player;
 
-    /**
-     * Mode data
-     */
     private String data;
 
     public String getName() {

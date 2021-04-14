@@ -38,7 +38,7 @@ import java.util.logging.Logger;
 // Sort of just a convenience class, so as to not make the LWC class more cluttered than it is right now
 public class MySQLPost200 implements MigrationUtility {
 
-    private static Logger logger = Logger.getLogger("Patcher");
+    private final static Logger logger = Logger.getLogger("Patcher");
 
     /**
      * Check for required SQLite to MySQL conversion

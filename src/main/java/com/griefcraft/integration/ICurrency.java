@@ -35,72 +35,72 @@ public interface ICurrency {
     /**
      * @return true if a currency is active
      */
-    public boolean isActive();
+    boolean isActive();
 
     /**
      * @return true if the Economy plugin can support the server account feature
      */
-    public boolean usingCentralBank();
+    boolean usingCentralBank();
 
     /**
      * Format money
      *
-     * @param money
-     * @return
+     * @param money The value to format
+     * @return String with the formatted value
      */
-    public String format(double money);
+    String format(double money);
 
     /**
      * Get the money name (e.g dollars)
      *
-     * @return
+     * @return String representing the currency name
      */
-    public String getMoneyName();
+    String getMoneyName();
 
     /**
      * Get the current balance for a player
      *
-     * @param player
-     * @return
+     * @param player The Player to get the balance from
+     * @return double representing the Player's current balance
      */
-    public double getBalance(Player player);
+    double getBalance(Player player);
 
     /**
      * Check the player's money to see if they can afford that
      * amount of money <b>without</b> going negative.
      *
-     * @param player
-     * @param money
-     * @return
+     * @param player Player to check the balance from
+     * @param money The price to check the Player's balance against
+     * @return True if the Player's balance is greater or equal to the provided value
      */
-    public boolean canAfford(Player player, double money);
+    boolean canAfford(Player player, double money);
 
     /**
      * Check if the server account can afford the amount of money given
      *
-     * @param money
-     * @return true if the server account has a balance equal or greater to the money given
+     * @param money The price to check against the Server account's balance
+     * @return True if the Server account's balance is greater or equal to the provided value
      */
-    public boolean canCentralBankAfford(double money);
+    boolean canCentralBankAfford(double money);
 
     /**
-     * Add money to a player's bank account
+     * Add money to a player's balance
      * If server account banking is enabled, the money is automatically withdrawn from the configured bank!
      *
-     * @param player
-     * @param money
-     * @return the balance after modifying the player's account
+     * @param player The Player to give money to
+     * @param money The amount to add to the Player's balance
+     * @return The Player's balance after modifying it
      */
-    public double addMoney(Player player, double money);
+    double addMoney(Player player, double money);
 
     /**
-     * Remove money from a player's bank account
+     * Remove money from a player's balance
      * If server account banking is enabled, the money is automatically added to the configured bank!
      *
-     * @param player
-     * @param money
-     * @return the balance after modifying the player's account
+     * @param player The Player to remove money from
+     * @param money The amount to remove from the Player's balance
+     * @return The Player's balance after modifying it
      */
-    public double removeMoney(Player player, double money);
+    double removeMoney(Player player, double money);
 
 }

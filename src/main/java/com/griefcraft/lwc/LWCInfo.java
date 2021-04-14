@@ -40,7 +40,7 @@ public class LWCInfo {
     /**
      * Sets LWC's version
      *
-     * @param version
+     * @param version The version to set
      */
     public static void setVersion(String version) {
         String implementationVersion = LWCPlugin.class.getPackage().getImplementationVersion();

@@ -59,178 +59,44 @@ import java.util.UUID;
 
 public class Protection {
 
-    /**
-     * The protection type
-     * <p>
-     * <p>
-     * Ordering <b>must NOT change</b> as ordinal values are used
-     * </p>
-     */
-    public enum Type {
-
-        /**
-         * The protection is usable by anyone; the most common use would include
-         * community chests where anyone can use the chest but no one should be
-         * able to protect as their own.
-         */
-        PUBLIC,
-
-        /**
-         * The owner (and anyone else) must enter a set password entered onto
-         * the chest in order to be able to access it. Entering the correct
-         * password allows them to use the chest until they log out or the
-         * protection is removed.
-         */
-        PASSWORD,
-
-        /**
-         * The protection is only usable by the player who created it. Further
-         * access can be given to players, groups, and even more specific
-         * entities such as Towns in the "Towny" plugin, or access lists via the
-         * "Lists" plugin
-         */
-        PRIVATE,
-
-        /**
-         * Reserved / unused, to keep ordinal order
-         */
-        RESERVED1,
-
-        /**
-         * Reserved / unused, to keep ordinal order
-         */
-        RESERVED2,
-
-        /**
-         * Allows players to deposit items into
-         */
-        DONATION,
-
-        /**
-         * Allows players to look into but not take
-         */
-        DISPLAY;
-
-        /**
-         * Match a protection type using its string form
-         *
-         * @param text
-         * @return
-         */
-        public static Type matchType(String text) {
-            for (Type type : values()) {
-                if (type.toString().equalsIgnoreCase(text)) {
-                    return type;
-                }
-            }
-
-            throw new IllegalArgumentException(
-                    "No Protection Type found for given type: " + text);
-        }
-
-    }
-
-    /**
-     * All of the history items associated with this protection
-     */
     private final Set<History> historyCache = new HashSet<>();
 
-    /**
-     * List of the permissions rights for the protection
-     */
     private final Set<Permission> permissions = new HashSet<>();
 
-    /**
-     * List of flags enabled on the protection
-     */
     private final Map<Flag.Type, Flag> flags = new HashMap<>();
 
-    /**
-     * The block id
-     */
     private int blockId;
 
-    /**
-     * The password for the chest
-     */
     private String password;
 
-    /**
-     * JSON data for the protection
-     */
     private final JSONObject data = new JSONObject();
 
-    /**
-     * Unique id (in sql)
-     */
     private int id;
 
-    /**
-     * The owner of the chest
-     */
     private String owner;
 
-    /**
-     * The protection type
-     */
     private Type type;
 
-    /**
-     * The world the protection is in
-     */
     private String world;
 
-    /**
-     * The x coordinate
-     */
     private int x;
 
-    /**
-     * The y coordinate
-     */
     private int y;
 
-    /**
-     * The z coordinate
-     */
     private int z;
 
-    /**
-     * The timestamp of when the protection was last accessed
-     */
     private long lastAccessed;
 
-    /**
-     * The time the protection was created
-     */
     private String creation;
 
-    /**
-     * Immutable flag for the protection. When removed, this bool is switched to
-     * true and any setters will no longer work. However, everything is still
-     * intact and in memory at this point (for now.)
-     */
     private boolean removed = false;
 
-    /**
-     * If the protection is pending removal. Only used internally.
-     */
     private boolean removing = false;
 
-    /**
-     * True when the protection has been modified and should be saved
-     */
     private boolean modified = false;
 
-    /**
-     * The protection finder used to find this protection
-     */
     private ProtectionFinder finder;
 
-    /**
-     * The block the protection is at. Saves world calls and allows better
-     * concurrency
-     */
     private Block cachedBlock;
 
     @Override
@@ -330,7 +196,7 @@ public class Protection {
      * Get a formatted version of the owner's name. If the owner is a UUID and
      * the UUID is unknown, then "Unknown (uuid)" will be returned.
      *
-     * @return
+     * @return The formatted Player name or "Unknown (uuid)" if unknown
      */
     public String getFormattedOwnerPlayerName() {
         return UUIDRegistry.formatPlayerName(owner);
@@ -373,19 +239,17 @@ public class Protection {
     /**
      * Ensure a history object is located in our cache
      *
-     * @param history
+     * @param history The History instance to check for in the cache
      */
     public void checkHistory(History history) {
-        if (!historyCache.contains(history)) {
-            historyCache.add(history);
-        }
+        historyCache.add(history);
     }
 
     /**
      * Check if a player has owner access to the protection
      *
-     * @param player
-     * @return
+     * @param player The Player to check against
+     * @return True if the player has Owner rights
      */
     public boolean isOwner(Player player) {
         LWC lwc = LWC.getInstance();
@@ -400,8 +264,8 @@ public class Protection {
     /**
      * Check if a player is the real owner to the protection
      *
-     * @param player
-     * @return
+     * @param player The Player to check against
+     * @return True if the Player is the actual owner
      */
     public boolean isRealOwner(Player player) {
         if (player == null) {
@@ -419,7 +283,7 @@ public class Protection {
     /**
      * Create a History object that is attached to this protection
      *
-     * @return
+     * @return Created instance of the History object
      */
     public History createHistoryObject() {
         History history = new History();
@@ -454,8 +318,8 @@ public class Protection {
     /**
      * Get the related history for this protection using the given type
      *
-     * @param type
-     * @return
+     * @param type The Typo of the History Object
+     * @return List of History instances matching the type
      */
     public List<History> getRelatedHistory(History.Type type) {
         List<History> matches = new ArrayList<>();
@@ -473,8 +337,8 @@ public class Protection {
     /**
      * Check if a flag is enabled
      *
-     * @param type
-     * @return
+     * @param type The flag Type to check
+     * @return True if the flags contain the specified type
      */
     public boolean hasFlag(Flag.Type type) {
         return flags.containsKey(type);
@@ -483,18 +347,19 @@ public class Protection {
     /**
      * Get the enabled flag for the corresponding type
      *
-     * @param type
-     * @return
+     * @param type The flag type to get the Flag from
+     * @return The Flag matching the provided Flag type
      */
     public Flag getFlag(Flag.Type type) {
         return flags.get(type);
     }
 
     /**
-     * Add a flag to the protection
+     * Add a flag to the protection<br>
+     * This will return false if the protection was removed, the flag is null or the flag list doesn't contain the type.
      *
-     * @param flag
-     * @return
+     * @param flag The flag to add to this protection
+     * @return True if the Flag could be added
      */
     public boolean addFlag(Flag flag) {
         if (removed || flag == null) {
@@ -513,7 +378,7 @@ public class Protection {
     /**
      * Remove a flag from the protection
      *
-     * @param flag
+     * @param flag The Flag to remove
      */
     public void removeFlag(Flag flag) {
         if (removed) {
@@ -528,8 +393,8 @@ public class Protection {
      * Check if the entity + permissions type exists, and if so return the
      * rights (-1 if it does not exist)
      *
-     * @param type
-     * @param name
+     * @param name The name of the permission to check for
+     * @param type The type of Permission to check
      * @return the permissions the player has
      */
     public Permission.Access getAccess(String name, Permission.Type type) {
@@ -547,7 +412,7 @@ public class Protection {
      * @return the list of permissions
      */
     public List<Permission> getPermissions() {
-        return Collections.unmodifiableList(new ArrayList<Permission>(
+        return Collections.unmodifiableList(new ArrayList<>(
                 permissions));
     }
 
@@ -555,21 +420,14 @@ public class Protection {
      * Remove temporary permissions rights from the protection
      */
     public void removeTemporaryPermissions() {
-        Iterator<Permission> iter = permissions.iterator();
-
-        while (iter.hasNext()) {
-            Permission permission = iter.next();
-
-            if (permission.isVolatile()) {
-                iter.remove();
-            }
-        }
+        permissions.removeIf(Permission::isVolatile);
     }
 
     /**
-     * Add an permission to the protection
+     * Add an permission to the protection<br>
+     * This won't do anything when the protection was removed or the permission is null
      *
-     * @param permission
+     * @param permission The permission to add
      */
     public void addPermission(Permission permission) {
         if (removed || permission == null) {
@@ -585,10 +443,11 @@ public class Protection {
     }
 
     /**
-     * Remove permissions from the protection that match a name AND type
+     * Remove permissions from the protection that match a name AND type<br>
+     * This will do nothing if the protection was removed
      *
-     * @param name
-     * @param type
+     * @param name The name of the permission to remove
+     * @param type The Type of the permission to remove
      */
     public void removePermissions(String name, Permission.Type type) {
         if (removed) {
@@ -619,19 +478,18 @@ public class Protection {
     /**
      * Checks if the protection has the correct block in the world
      *
-     * @return
+     * @return True if the Block is the right type for the protection
      */
     public boolean isBlockInWorld() {
         int storedBlockId = getBlockId();
         Block block = getBlock();
 
         BlockCache blockCache = BlockCache.getInstance();
-        switch (block.getType()) {
-            case FURNACE:
-                return storedBlockId == blockCache.getBlockId(Material.FURNACE);
-            default:
-                return storedBlockId == blockCache.getBlockId(block);
+        if(block.getType() == Material.FURNACE){
+            return storedBlockId == blockCache.getBlockId(Material.FURNACE);
         }
+        
+        return storedBlockId == blockCache.getBlockId(block);
     }
 
     public JSONObject getData() {
@@ -784,7 +642,7 @@ public class Protection {
     /**
      * Sets the protection finder used to create this protection
      *
-     * @param finder
+     * @param finder The ProtectionFinder instance to set
      */
     public void setProtectionFinder(ProtectionFinder finder) {
         this.finder = finder;
@@ -868,8 +726,7 @@ public class Protection {
 
                     // the ifnull compensates for the block being in the null
                     // cache. It will remove it from that.
-                    if ((protection != null && id == protection.getId())
-                            || protection == null) {
+                    if (protection == null || id == protection.getId()) {
                         cache.remove(cacheKey);
                     }
                 }
@@ -952,9 +809,7 @@ public class Protection {
         if (uuid == null) {
             try {
                 uuid = UUID.fromString(owner);
-            } catch (Exception e) {
-                uuid = null;
-            }
+            } catch (Exception ignored) {}
         }
 
         if (uuid == null) {
@@ -983,19 +838,18 @@ public class Protection {
     }
 
     /**
-     * @return
+     * @return This Protection Object in String format
      */
     @Override
     public String toString() {
         // format the flags prettily
-        String flagStr = "";
+        StringBuilder builder = new StringBuilder();
 
         for (Flag flag : flags.values()) {
-            flagStr += flag.toString() + ",";
-        }
-
-        if (flagStr.endsWith(",")) {
-            flagStr = flagStr.substring(0, flagStr.length() - 1);
+            if (builder.length() > 0) {
+                builder.append(",");
+            }
+            builder.append(flag.toString());
         }
 
         // format the last accessed time
@@ -1018,7 +872,7 @@ public class Protection {
                         typeToString(),
                         (blockType != null ? LWC.materialToString(blockType)
                                 : "Not yet cached"), id, owner, world, x, y, z,
-                        creation, flagStr, lastAccessed);
+                        creation, builder, lastAccessed);
     }
 
     /**
@@ -1084,6 +938,82 @@ public class Protection {
     public void update() {
         throw new UnsupportedOperationException(
                 "Protection.update() is no longer necessary!");
+    }
+    
+    /**
+     * The protection type
+     * <p>
+     * <p>
+     * Ordering <b>must NOT change</b> as ordinal values are used
+     * </p>
+     */
+    public enum Type {
+        
+        /**
+         * The protection is usable by anyone; the most common use would include
+         * community chests where anyone can use the chest but no one should be
+         * able to protect as their own.
+         */
+        PUBLIC,
+        
+        /**
+         * The owner (and anyone else) must enter a set password entered onto
+         * the chest in order to be able to access it. Entering the correct
+         * password allows them to use the chest until they log out or the
+         * protection is removed.
+         */
+        PASSWORD,
+        
+        /**
+         * The protection is only usable by the player who created it. Further
+         * access can be given to players, groups, and even more specific
+         * entities such as Towns in the "Towny" plugin, or access lists via the
+         * "Lists" plugin
+         */
+        PRIVATE,
+        
+        /**
+         * Reserved / unused, to keep ordinal order
+         */
+        RESERVED1,
+        
+        /**
+         * Reserved / unused, to keep ordinal order
+         */
+        RESERVED2,
+        
+        /**
+         * Allows players to deposit items into
+         */
+        DONATION,
+        
+        /**
+         * Allows players to look into but not take
+         */
+        DISPLAY,
+        
+        /**
+         * Used for the {@link #matchType(String) matchType} method for when the provided String doesn't match any
+         * other entry.
+         */
+        INVALID;
+        
+        /**
+         * Match a protection type using its string form
+         *
+         * @param text The name to check against
+         * @return The matching Type instance if found, or {@link #INVALID INVALID} otherwise
+         */
+        public static Type matchType(String text) {
+            for (Type type : values()) {
+                if (type.toString().equalsIgnoreCase(text)) {
+                    return type;
+                }
+            }
+            
+            return INVALID;
+        }
+        
     }
 
 }

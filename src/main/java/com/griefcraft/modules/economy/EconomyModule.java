@@ -103,14 +103,15 @@ public class EconomyModule extends JavaModule {
         // Can they afford it?
         if (!lwc.getCurrency().canAfford(player, usageFee)) {
             // Nope!
-            lwc.sendLocale(player, "lwc.economy.insufficientfund.open", "usageFee", lwc.getCurrency().format(usageFee).toString());
+            lwc.sendLocale(player, "lwc.economy.insufficientfund.open", "usageFee", lwc.getCurrency().format(usageFee));
             event.setResult(Result.CANCEL);
             return;
         }
 
         // Charge them!
-        lwc.getCurrency().removeMoney(player, usageFee);
-        lwc.sendLocale(player, "lwc.economy.charged.open", "usageFee", lwc.getCurrency().format(usageFee).toString());
+        double balance = lwc.getCurrency().removeMoney(player, usageFee);
+        lwc.sendLocale(player, "lwc.economy.charged.open", "usageFee", lwc.getCurrency().format(usageFee),
+                "balance", balance);
     }
 
     @Override
@@ -262,8 +263,9 @@ public class EconomyModule extends JavaModule {
             // the currency to use
             ICurrency currency = lwc.getCurrency();
 
-            currency.addMoney(owner, charge);
-            lwc.sendLocale(owner, "lwc.economy.refund.onremove", "charge", currency.format(charge).toString());
+            double balance = currency.addMoney(owner, charge);
+            lwc.sendLocale(owner, "lwc.economy.refund.onremove", "charge", currency.format(charge),
+                    "balance", balance);
         }
     }
 
@@ -356,8 +358,8 @@ public class EconomyModule extends JavaModule {
             lwc.sendLocale(player, "lwc.economy.charged.onthehouse");
         } else {
             if (!currency.canAfford(player, charge)) {
-                lwc.sendLocale(player, "lwc.economy.insufficientfund.purchase", "currencyName", currency.getMoneyName().toString());
-                lwc.sendLocale(player, "lwc.economy.insufficientfund.remark", "charge", currency.format(charge).toString());
+                lwc.sendLocale(player, "lwc.economy.insufficientfund.purchase", "currencyName", currency.getMoneyName());
+                lwc.sendLocale(player, "lwc.economy.insufficientfund.remark", "charge", currency.format(charge));
 
                 // remove from cache
                 priceCache.remove(location);
@@ -366,11 +368,13 @@ public class EconomyModule extends JavaModule {
             }
 
             // remove the money from their account
-            currency.removeMoney(player, charge);
+            double balance = currency.removeMoney(player, charge);
             if(usedDiscount)
-                lwc.sendLocale(player, "lwc.economy.charged.discountedprice", "charge", currency.format(charge).toString());
+                lwc.sendLocale(player, "lwc.economy.charged.discountedprice", "charge", currency.format(charge),
+                        "balance", balance);
             else
-                lwc.sendLocale(player, "lwc.economy.charged.normalprice", "charge", currency.format(charge).toString());
+                lwc.sendLocale(player, "lwc.economy.charged.normalprice", "charge", currency.format(charge),
+                        "balance", balance);
         }
 
     }
